@@ -73,14 +73,9 @@
 
 @@@ Define the offset for the GPIO Registers
 @@@ --------------------------------------------------------------------------
-	.equ GPFSEL1,	0x04
-	.equ GPFSEL2,	0x08
 	.equ GPSET0,	0x1C
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
-
-	.equ OUTPUT,	0b001
-	.equ INPUT,		0b000
 
 @@@ --------------------------------------------------------------
 @@@ Colors from the Co-Prozessor ---------------------------------
@@ -117,13 +112,6 @@ msg_timer_mem: .asciz "Timer memory is: %p\n"
 
 msg_print_int: .asciz "%d\n"
 msg_print_hex: .asciz "%x\n"
-
-.align 4
-gpio_fsel0_clear: 	@0011 1111 1111 1111 1111 1111 1100 0000
-			.word 	0x3FFFFFC0
-.align 4
-gpio_fsel0_output: 	@0000 1001 0010 0100 1001 0000 0000 0000
-			.word	0x09249000
 
 @@@ --------------------------------------------------------------
 @@@ Start Text Section -------------------------------------------
@@ -266,39 +254,6 @@ init_hardware:
 	bl printf
 
 @@@ Initialize the inputs and outputs for the machine ------------
-	mov r0, rGPIO
-	bl init_output_input
-
-@@@ Set the second alternate function select register ------------
-/*
-	ldr r4, [rGPIO, #GPFSEL1]
-
-	@ Define button3 as input
-	bic r4, r4, #0b111
-
-	@ Define color-wheel pins as output
-	bic r4, r4, #0b111 << 9
-	bic r4, r4, #0b111111 << 18
-	orr r4, r4, #OUTPUT << 9
-	orr r4, r4, #0b001001 << 18
-
-	@ Define feeder as output
-	bic r4, r4, #0b111 << 27
-	orr r4, r4, #OUTPUT << 27
-
-	str r4, [rGPIO, #GPFSEL1]
-	*/
-@@@ --------------------------------------------------------------------------
-
-@@@ Set the third alternate function select register ------------------------
-	ldr r4, [rGPIO, #GPFSEL2]
-
-	@ Define the color pins as input
-	bic r4, r4, #0b111111 << 9
-	bic r4, r4, #0b111 << 6
-
-	str r4, [rGPIO, #GPFSEL2]
-
 	mov r0, rGPIO
 	bl init_output_input
 

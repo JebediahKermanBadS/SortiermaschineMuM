@@ -18,35 +18,39 @@
 	.equ GPFSEL0, 	0x00
 	.equ GPFSEL1, 	0x04
 	.equ GPFSEL2, 	0x08
-	.equ GPFSEL3, 	0x0C
-	.equ GPFSEL4, 	0x10
-	.equ GPFSEL5, 	0x14
 @@@ --------------------------------------------------------------
-
-	.equ OUTPUT,	0b001
 
 .data
 msg_hex: .asciz "%xh\n"
 
-.align 4			 			@ 0000 0000 0010 0100 1001 0010 0100 0000
-gpio_outputdef_fsel0: 	.word 	0x00249240
+.align 4
+gpio_outputdef_fsel0: 	@ 0000 0000 0010 0100 1001 0010 0100 0000
+				.word 	0x00249240
 
 .align 4
-gpio_resetdef_fsel1:	@ 0011 1000 1111 1100 0000 1111 1111 1111
-				.word	0x38FC0FFF
+gpio_resetdef_fsel1:	@ 1100 0111 0000 0011 1111 0000 0000 0000
+				.word	0xC703F000
 gpio_outputdef_fsel1:	@ 0000 1000 0010 0100 0000 0010 0100 1000
 				.word 	0x08240248
 
+.align 4
+gpio_resetdef_fsel2:	@ 1111 1100 0000 0000 0000 0000 0000 0000
+				.word	0xFC000000
+gpio_outputdef_fsel2:	@ 0000 0000 0010 0100 0000 0000 0000 0000
+				.word 	0x00240000
+
+
+@@@ Start Textsection --------------------------------------------
 .text
-
-
 .global init_output_input
 .global init_timer_ir
 
-@@@ This method defines the pins of the sortmachine as inputs/outpus
+@@@ --------------------------------------------------------------
+@@@ This defines the pins as output/input
 @@@ Input paramter:
 @@@ 	r0: The virtual gpio address
 @@@ Returns: Nothing
+@@@ --------------------------------------------------------------
 init_output_input:
 	push {lr}
 
@@ -66,15 +70,15 @@ init_output_input:
 	str r1, [r0, #GPFSEL0]
 @@@ --------------------------------------------------------------
 
-@@@ Start defining the second GPIO Function select register ------
+@@@ Start defining of the second GPIO Function select register ---
 	ldr r1, [r0, #GPFSEL1]
 
-	@ Clear the pins used in the machine
+	@ Clear the pins used in the machine, dont change others
 	ldr r2, =gpio_resetdef_fsel1
 	ldr r2, [r2]
 	and r1, r1, r2
 
-	@ gpio_outputdef_fsel1
+	@ Set the bits for outputs, dont change inputs ot other pins
 	ldr r2, =gpio_outputdef_fsel1
 	ldr r2, [r2]
 	orr r1, r1, r2
@@ -82,8 +86,21 @@ init_output_input:
 	str r1, [r0, #GPFSEL1]
 @@@ --------------------------------------------------------------
 
-	ldr r0, =msg_hex
-	bl printf
+@@@ Start defining of the third GPIO Function select register ----
+	ldr r1, [r0, #GPFSEL2]
+
+	@ Clear the pins used in the machine, dont change others
+	ldr r2, =gpio_resetdef_fsel2
+	ldr r2, [r2]
+	and r1, r1, r2
+
+	@ Set the bits for outputs, dont change inputs ot other pins
+	ldr r2, =gpio_outputdef_fsel2
+	ldr r2, [r2]
+	orr r1, r1, r2
+
+	str r1, [r0, #GPFSEL2]
+@@@ --------------------------------------------------------------
 
 	pop {lr}
 	bx lr
@@ -94,6 +111,7 @@ init_timer_ir:
 	pop {lr}
 	bx lr
 
+@@@ --------------------------------------------------------------
 
 
 
