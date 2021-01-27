@@ -9,42 +9,7 @@
 @@@	date:	 2020/01/26
 @@@	verison: 1.0.0
 @@@ --------------------------------------------------------------------------
-
-
-@@@ Constants defining the flags for opening the gpiomem file
-@@@ Defined in /usr/include/asm-generic/fcntl.h
-	.equ O_RDWR, 	02				@ Read and Write the file.
-	.equ O_DSYNC, 	010000
-	.equ O_SYNC, 	04000000|O_DSYNC
-	.equ O_FLAGS, 	O_RDWR|O_SYNC
-
-@@@ Constants defining the gpio mapping
-@@@ Defined in /usr/include/asm-generic/mman-common.h
-	.equ PROT_RW, 		0x01|0x02	@ Can read(0x01) and write(0x02) the memory
-	.equ MAP_SHARED,	0x01		@ Share the memory with oder processes
-
-	.equ PERIPH,		 0x20000000
-	.equ GPIO_OFFSET,	 0x200000
-	.equ TIMERIR_OFFSET, 0xB000
-
-	.equ PAGE_SIZE, 4096
-
-
-
-
-@@@ Define the offset for the GPIO Registers
-@@@ --------------------------------------------------------------------------
-	.equ GPFSEL1,	0x04
-	.equ GPFSEL2,	0x08
-	.equ GPSET0,	0x1C
-	.equ GPCLR0,	0x28
-	.equ GPLVL0,	0x34
-
-	.equ OUTPUT,	0b001
-	.equ INPUT,		0b000
-
-
-@@@ Pins for the 7-Segment Display -------------------------------
+@@@ Pins of the 7-Segment Display --------------------------------
 	.equ pin_SER,		2
 	.equ pin_SRCLK,		3
 	.equ pin_nSRCLR,	4
@@ -87,6 +52,35 @@
 
 @@@ Pin to let the co-processor sleep ----------------------------
 	.equ pin_nSLP,		27
+
+@@@ Constants defining the flags for opening the gpiomem file
+@@@ Defined in /usr/include/asm-generic/fcntl.h
+	.equ O_RDWR, 	02				@ Read and Write the file.
+	.equ O_DSYNC, 	010000
+	.equ O_SYNC, 	04000000|O_DSYNC
+	.equ O_FLAGS, 	O_RDWR|O_SYNC
+
+@@@ Constants defining the gpio mapping
+@@@ Defined in /usr/include/asm-generic/mman-common.h
+	.equ PROT_RW, 		0x01|0x02	@ Can read(0x01) and write(0x02) the memory
+	.equ MAP_SHARED,	0x01		@ Share the memory with oder processes
+
+	.equ PERIPH,		 0x20000000
+	.equ GPIO_OFFSET,	 0x200000
+	.equ TIMERIR_OFFSET, 0xB000
+
+	.equ PAGE_SIZE, 4096
+
+@@@ Define the offset for the GPIO Registers
+@@@ --------------------------------------------------------------------------
+	.equ GPFSEL1,	0x04
+	.equ GPFSEL2,	0x08
+	.equ GPSET0,	0x1C
+	.equ GPCLR0,	0x28
+	.equ GPLVL0,	0x34
+
+	.equ OUTPUT,	0b001
+	.equ INPUT,		0b000
 
 @@@ --------------------------------------------------------------
 @@@ Colors from the Co-Prozessor ---------------------------------
@@ -148,6 +142,8 @@ timerIR: 	.word PERIPH + TIMERIR_OFFSET
 
 .extern init_gpiomem
 
+.extern init_output_input
+
 .global main
 main:
 	push {fp, lr}
@@ -157,6 +153,7 @@ main:
 	bl printf
 
 init_gpio_mem:
+
 	@ Opening the file /dev/gpiomem with read/write access
 	ldr r0, =file_gpiomem
 	ldr r1, openMode
@@ -268,26 +265,12 @@ init_hardware:
 	ldr r0, =msg_print_hex
 	bl printf
 
-@@@ Set the first alternate function select register -------------
-	ldr r4, [rGPIO]
-
-	@mov r1, r4
-	@ldr r0, =msg_print_hex
-	@@bl printf
-
-	@ Define pins 2-9 as input
-	ldr r5, =gpio_fsel0_clear
-	ldr r5, [r5]
-	bic r4, r4, r5
-
-	@ Define pins 2-7 as output
-	ldr r5, =gpio_fsel0_output
-	ldr r5, [r5]
-	orr r4, r4, r5
-
-	str r4, [rGPIO]
+@@@ Initialize the inputs and outputs for the machine ------------
+	mov r0, rGPIO
+	bl init_output_input
 
 @@@ Set the second alternate function select register ------------
+/*
 	ldr r4, [rGPIO, #GPFSEL1]
 
 	@ Define button3 as input
@@ -304,6 +287,7 @@ init_hardware:
 	orr r4, r4, #OUTPUT << 27
 
 	str r4, [rGPIO, #GPFSEL1]
+	*/
 @@@ --------------------------------------------------------------------------
 
 @@@ Set the third alternate function select register ------------------------
@@ -315,11 +299,15 @@ init_hardware:
 
 	str r4, [rGPIO, #GPFSEL2]
 
+	mov r0, rGPIO
+	bl init_output_input
+
 main_loop:
+
 	@ Setting the feeder to on
 	ldr r1, [rGPIO, #GPSET0]
 	mov r4, #0x01
-	orr r1, r1, r4, LSL #pin_feeder
+	orr r1, r1, r4, LSL #19
 	str r1, [rGPIO, #GPSET0]
 
 	@ Sleep 5 seconds
