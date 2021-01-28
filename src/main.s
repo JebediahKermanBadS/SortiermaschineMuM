@@ -9,6 +9,10 @@
 @@@	date:	 2020/01/26
 @@@	verison: 1.0.0
 @@@ --------------------------------------------------------------------------
+
+@@@ TODO REMOVE
+	.equ PAGE_SIZE, 		4096
+
 @@@ Pins of the 7-Segment Display --------------------------------
 	.equ pin_SER,		2
 	.equ pin_SRCLK,		3
@@ -53,23 +57,7 @@
 @@@ Pin to let the co-processor sleep ----------------------------
 	.equ pin_nSLP,		27
 
-@@@ Constants defining the flags for opening the gpiomem file
-@@@ Defined in /usr/include/asm-generic/fcntl.h
-	.equ O_RDWR, 	02				@ Read and Write the file.
-	.equ O_DSYNC, 	010000
-	.equ O_SYNC, 	04000000|O_DSYNC
-	.equ O_FLAGS, 	O_RDWR|O_SYNC
 
-@@@ Constants defining the gpio mapping
-@@@ Defined in /usr/include/asm-generic/mman-common.h
-	.equ PROT_RW, 		0x01|0x02	@ Can read(0x01) and write(0x02) the memory
-	.equ MAP_SHARED,	0x01		@ Share the memory with oder processes
-
-	.equ PERIPH,		 0x20000000
-	.equ GPIO_OFFSET,	 0x200000
-	.equ TIMERIR_OFFSET, 0xB000
-
-	.equ PAGE_SIZE, 4096
 
 @@@ Define the offset for the GPIO Registers
 @@@ --------------------------------------------------------------------------
@@ -92,7 +80,6 @@
 	rTIMER	.req r9
 	rGPIO	.req r10
 
-
 @@@ --------------------------------------------------------------
 @@@ Start Data Section -------------------------------------------
 .data
@@ -100,26 +87,16 @@
 
 msg_init: .asciz "M&M Sorting Machine started!\nThis is a program from the following group:\n\t- Demiroez, Dilara\n\t- Gonther, Levin\n\t- Grajczak, Benjamin\n\t- Pfister, Marc\n"
 
-file_mem:		.asciz "/dev/mem"
-file_gpiomem: 	.asciz "/dev/gpiomem"
-
-file_open_failure: .asciz "Failure! Cant open the file %s. Try execute wiht sudo\n"
-file_close_failure: .asciz "Failure! Not possible to close the file %s correctly.\n"
-gpio_munmap_failure: .asciz "Failure unmapping the gpio memory!\n"
-
 msg_gpio_mem: 	.asciz "Gpio memory is: %p\n"
-msg_timer_mem: .asciz "Timer memory is: %p\n"
+msg_timer_mem: 	.asciz "Timer memory is: %p\n"
 
-msg_print_int: .asciz "%d\n"
-msg_print_hex: .asciz "%x\n"
+msg_print_int: 	.asciz "%d\n"
+msg_print_hex: 	.asciz "%x\n"
 
 @@@ --------------------------------------------------------------
 @@@ Start Text Section -------------------------------------------
-.text
 
-openMode:	.word O_FLAGS
-gpio: 		.word PERIPH + GPIO_OFFSET
-timerIR: 	.word PERIPH + TIMERIR_OFFSET
+.text
 
 .extern printf
 .extern open
@@ -128,9 +105,15 @@ timerIR: 	.word PERIPH + TIMERIR_OFFSET
 .extern munmap
 .extern sleep
 
-.extern init_gpiomem
+@ From memory_access.S
+.extern mmap_gpio_mem
+.extern mmap_timerIR_mem
+.extern munmap_gpio_mem
+.extern munmmap_timerIR_mem
 
+@ From sortmachine_pin.S
 .extern init_output_input
+.extern init_timerIR_registers
 
 .global main
 main:
@@ -140,122 +123,38 @@ main:
 	ldr r0, =msg_init
 	bl printf
 
-init_gpio_mem:
-
-	@ Opening the file /dev/gpiomem with read/write access
-	ldr r0, =file_gpiomem
-	ldr r1, openMode
-	bl open
-
-	@ Store the file descriptor (r0) on the top of the stack
-	sub sp, sp, #8
-	str r0, [sp]
-
-	@ Check if there are any errors
-	cmp r0, #-1
-	ldreq r0, =file_open_failure
-	ldreq r1, =file_gpiomem
-	bleq printf
+	@ Map the virtual address for the gpio registers
+	bl mmap_gpio_mem
+	mov rGPIO, r0
+	cmp rGPIO, #-1
 	beq main_end
 
-	@ Map the gpio registers
-	ldr r0, gpio
-	str r0, [sp, #4]
-	mov r0, #0				@ No prefer where to allocate the memory
-	mov r1, #PAGE_SIZE
-	mov r2, #PROT_RW
-	mov r3, #MAP_SHARED
-	bl mmap
-	@ Store and print the virtual address
-	mov rGPIO, r0
+	@ Map the virtual address for the timer and interrupt register
+	bl mmap_timerIR_mem
+	mov rTIMER, r0
+	cmp rTIMER, #-1
+	beq main_munmap_pgpio
+
+	@ Print the virtual address for the gpio reigsters
 	ldr r0, =msg_gpio_mem
 	mov r1, rGPIO
 	bl printf
 
-	@ Closing the gpio file and restore stack pointer
-	ldr r0, [sp], #8
-	bl close
-
-	@ Print an error message if its not possible to close the file
-	cmp r0, #0
-	ldrne r1, =file_gpiomem
-	ldrne r0, =file_close_failure
-	blne printf
-
-@@@ --------------------------------------------------------------
-@@@ Open the file /dev/mem for the timer and interrupts ----------
-	ldr r0, =file_mem
-	ldr r1, openMode
-	bl open
-
-	@ Store the file descriptor (r0) on the top of the stack
-	sub sp, sp, #8
-	str r0, [sp]
-
-	@ Print an error message if its not possible to open the file
-	cmp r0, #-1
-	ldreq r0, =file_open_failure
-	ldreq r1, =file_mem
-	bleq printf
-	beq main_end_unmapgpio
-
-	@ Map the timer reigsters
-	ldr r0, timerIR
-	str r0, [sp, #4]
-	mov r0, #0				@ No prefer where to allocate the memory
-	mov r1, #PAGE_SIZE
-	mov r2, #PROT_RW
-	mov r3, #MAP_SHARED
-	bl mmap
-
-	@ Store and print the virtual address
-	mov rTIMER, r0
+	@ Print the virutal address for the timer registers
 	ldr r0, =msg_timer_mem
 	mov r1, rTIMER
 	bl printf
 
-	@ Closing the mem file and restore stack pointer
-	ldr r0, [sp], #8
-	bl close
-
-	@ Print an error message if its not possible to close the file
-	cmp r0, #0
-	ldrne r0, =file_close_failure
-	ldrne r1, =file_mem
-	blne printf
-
 init_hardware:
 
-	mov r1, #1
-	str r1, [rTIMER, #0x18]
-
-	ldr r0, =msg_print_hex
-	ldr r1, [rTIMER,#0x408]
-	mov r4, r1
-	bl printf
-
-	orr r4, r4, #0b101 << 5
-	str r4, [rTIMER,#0x408]
-
-	ldr r0, =msg_print_hex
-	mov r1, r4
-	bl printf
-
-	ldr r0, =msg_print_hex
-	ldr r1, [rTIMER,#0x408]
-	bl printf
-
-	ldr r1, [rTIMER, #0x218]
-	orr r1, r1, #0x01
-	@str r1, [rTIMER, #0x218]
-
-	ldr r1, [rTIMER, #0x218]
-	ldr r0, =msg_print_hex
-	bl printf
-
-@@@ Initialize the inputs and outputs for the machine ------------
+	@@@ Initialize the inputs and outputs for the machine
 	mov r0, rGPIO
 	bl init_output_input
+
+	@ TODO Uncommend this
+	@@@ Initialize the timer and interrupts
+	@mov r0, rTIMER
+	@bl init_timerIR_registers
 
 main_loop:
 
@@ -275,31 +174,17 @@ main_loop:
 	str r1, [rGPIO, #GPCLR0]
 
 main_end_unmap:
+	mov r0, rTIMER
+	bl munmmap_timerIR_mem
 
-
-main_end_unmapgpio:
-
-	@ Unmap the memory
+main_munmap_pgpio:
 	mov r0, rGPIO
-	mov r1, #PAGE_SIZE
-	bl munmap
-
-	@ Display munmap success
-	cmp r0, #-1
-	ldreq r0, =gpio_munmap_failure
-	bleq printf
+	bl munmap_gpio_mem
 
 main_end:
 	mov sp, fp
 	pop {fp, lr}
 	bx lr
-
-irq:
-	push {r0, r1, lr}
-	ldr r0, =msg_init
-	bl printf
-
-	pop {r0, r1, lr}
 
 
 

@@ -20,6 +20,8 @@
 	.equ GPFSEL2, 	0x08
 @@@ --------------------------------------------------------------
 
+@@@ --------------------------------------------------------------
+@@@ Start Data Section -------------------------------------------
 .data
 msg_hex: .asciz "%xh\n"
 
@@ -39,11 +41,12 @@ gpio_resetdef_fsel2:	@ 1111 1100 0000 0000 0000 0000 0000 0000
 gpio_outputdef_fsel2:	@ 0000 0000 0010 0100 0000 0000 0000 0000
 				.word 	0x00240000
 
-
-@@@ Start Textsection --------------------------------------------
+@@@ Start Textsection -------------------------------------------
+@@@ -------------------------------------------------------------
 .text
+
 .global init_output_input
-.global init_timer_ir
+.global init_timerIR_registers
 
 @@@ --------------------------------------------------------------
 @@@ This defines the pins as output/input
@@ -105,8 +108,42 @@ init_output_input:
 	pop {lr}
 	bx lr
 
-init_timer_ir:
+
+@@@ --------------------------------------------------------------
+@@@ This function initializes the timer and interrupts
+@@@ Input paramter:
+@@@ 	r0: The virtual memory address
+@@@ Returns: Nothing
+@@@ --------------------------------------------------------------
+init_timerIR_registers:
 	push {lr}
+
+	mov r1, #1
+	str r1, [r0, #0x18]
+
+	ldr r0, =msg_hex
+	ldr r1, [r0, #0x408]
+	mov r4, r1
+	bl printf
+
+	orr r4, r4, #0b101 << 5
+	str r4, [r0, #0x408]
+
+	ldr r0, =msg_hex
+	mov r1, r4
+	bl printf
+
+	ldr r0, =msg_hex
+	ldr r1, [r0, #0x408]
+	bl printf
+
+	ldr r1, [r0, #0x218]
+	orr r1, r1, #0x01
+	@str r1, [rTIMER, #0x218]
+
+	ldr r1, [r0, #0x218]
+	ldr r0, =msg_hex
+	bl printf
 
 	pop {lr}
 	bx lr
