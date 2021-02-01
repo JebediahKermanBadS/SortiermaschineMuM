@@ -156,20 +156,15 @@ init_hardware:
 
 main_loop:
 
-	@ Setting the feeder to on
-	ldr r1, [rGPIO, #GPSET0]
-	mov r4, #0x01
-	orr r1, r1, r4, LSL #19
-	str r1, [rGPIO, #GPSET0]
+	mov r0, rGPIO
+	bl set_feeder_on
 
 	@ Sleep 5 seconds
 	mov r0, #5
 	bl sleep
 
-	@ Setting the feeder to off
-	ldr r1, [rGPIO, #GPCLR0]
-	orr r1, r1, r4, LSL #19
-	str r1, [rGPIO, #GPCLR0]
+	mov r0, rGPIO
+	bl set_feeder_off
 
 main_end_unmap:
 	mov r0, rTIMER
