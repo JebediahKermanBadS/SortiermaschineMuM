@@ -94,8 +94,8 @@ msg_print_hex: 	.asciz "%x\n"
 .extern sleep
 
 @ From memory_access.S
-.extern mmap_gpio_mem
-.extern mmap_timerIR_mem
+.extern mmap_gpio
+.extern mmap_timerIR
 .extern munmap_gpio_mem
 .extern munmmap_timerIR_mem
 
@@ -116,13 +116,13 @@ main:
 	bl printf
 
 	@ Map the virtual address for the gpio registers
-	bl mmap_gpio_mem
+	bl mmap_gpio
 	mov rGPIO, r0
 	cmp rGPIO, #-1
 	beq main_end
 
 	@ Map the virtual address for the timer and interrupt register
-	bl mmap_timerIR_mem
+	bl mmap_timerIR
 	mov rTIMER, r0
 	cmp rTIMER, #-1
 	beq main_munmap_pgpio
