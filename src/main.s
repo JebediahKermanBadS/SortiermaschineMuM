@@ -87,17 +87,12 @@ msg_print_hex: 	.asciz "%x\n"
 .text
 
 .extern printf
-.extern open
-.extern close
-.extern mmap
-.extern munmap
 .extern sleep
 
 @ From memory_access.S
 .extern mmap_gpio
 .extern mmap_timerIR
-.extern munmap_gpio_mem
-.extern munmmap_timerIR_mem
+.extern unmap_memory
 
 @ From sortmachine_pin.S
 .extern init_output_input
@@ -175,11 +170,11 @@ main_loop:
 
 main_end_unmap:
 	mov r0, rTIMER
-	bl munmmap_timerIR_mem
+	bl unmap_memory
 
 main_munmap_pgpio:
 	mov r0, rGPIO
-	bl munmap_gpio_mem
+	bl unmap_memory
 
 main_end:
 	mov sp, fp

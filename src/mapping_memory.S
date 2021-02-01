@@ -47,28 +47,23 @@ file_gpiomem: 	.asciz "/dev/gpiomem"
 @@@ Failure messages
 file_open_failure: .asciz "Failure! Cant open the file %s. Try execute with sudo\n"
 file_close_failure: .asciz "Failure! Not possible to close the file %s correctly.\n"
-gpio_munmap_failure: .asciz "Failure unmapping the gpio memory!\n"
-timerIR_munmap_failure: .asciz "Failure unmapping the timer and interrupt memory!\n"
+unmap_failure: .asciz "Failure unmapping the virtual address: %p\n"
 
 @@@ -------------------------------------------------------------------
 @@@ Start Text Section ------------------------------------------------
 .text
+
+.global mmap_gpio
+.global mmap_timerIR
+
+.global unmap_memory
+
 
 .extern open
 .extern close
 .extern mmap
 .extern munmap
 .extern printf
-
-.global mmap_gpio
-.global mmap_timerIR
-
-.global munmap_gpio
-.global munmmap_timerIR
-
-
-.global munmap_gpio_mem
-.global munmmap_timerIR_mem
 
 openMode:	.word O_FLAGS
 gpio: 		.word PERIPH + GPIO_OFFSET
@@ -109,6 +104,34 @@ mmap_timerIR:
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
+@@@ Unmaps a virutal address
+@@@ Input paramter:
+@@@		- r0: 	The virtual address
+@@@ Returns:
+@@@		- Nothing
+unmap_memory:
+	push {lr}
+
+	@ Unmap the memory
+	mov r1, #PAGE_SIZE
+	bl munmap
+
+	@ Display munmap success
+	cmp r0, #-1
+	ldreq r0, =unmap_failure
+	bleq printf
+
+	pop {lr}
+	bx lr
+
+@@@ -----------------------------------------------------------------------------------------
+@@@ Creates a virtual address from a specific file
+@@@ Input paramter:
+@@@		- r0: 	The filename
+@@@		- r1: 	The offset for the register
+@@@ Returns:
+@@@		- r0: 	The virtual adddress
+@@@				If (r0 == -1) --> Error! Don't use this as address ;)
 mapFileToMemory:
 	push {r0, fp, lr}
 	mov fp, sp
@@ -160,56 +183,4 @@ mapFileToMemory_exit:
 	mov sp, fp
 	pop {r1, fp, lr}
 	bx lr
-
-@@@ --------------------------------------------------------------
-@@@ Unmaps the virtual gpio address
-@@@ Input paramter:
-@@@			- r0: 	The virtual address
-@@@ Returns:
-@@@			- None
-@@@ --------------------------------------------------------------
-munmap_gpio_mem:
-	push {lr}
-
-	@ Unmap the memory
-	mov r1, #PAGE_SIZE
-	bl munmap
-
-	@ Display munmap success
-	cmp r0, #-1
-	ldreq r0, =gpio_munmap_failure
-	bleq printf
-
-	pop {lr}
-	bx lr
-@@@ --------------------------------------------------------------
-
-
-@@@ --------------------------------------------------------------
-@@@ Unmaps the virtual timer interrupt address
-@@@ Input paramter:
-@@@			- r0: 	The virtual address
-@@@ Returns:
-@@@			- None
-@@@ --------------------------------------------------------------
-munmmap_timerIR_mem:
-	push {lr}
-
-	@ Unmap the memory
-	mov r1, #PAGE_SIZE
-	bl munmap
-
-	@ Display munmap success
-	cmp r0, #-1
-	ldreq r0, =timerIR_munmap_failure
-	bleq printf
-
-	pop {lr}
-	bx lr
-@@@ --------------------------------------------------------------
-
-
-
-
-
 
