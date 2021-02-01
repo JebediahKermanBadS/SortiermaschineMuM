@@ -27,70 +27,79 @@
 	.equ GPCLR0,		0x28
 	.equ GPLEV0,		0x34
 
-	.equ SLEEP_TIME_US,	20000
+	.equ SLEEP_TIME_US,	2000
+
+//  Renamimg registers -------------------------------------------
+	rGPIO	.req r10
 
 .data
 msg_hex: .asciz "%x\n"
 
 .text
 
-test: .word TEST
-
 .global color_wheel_calibrate
 .global color_wheel_rotate90
 
 color_wheel_calibrate:
-	push {r4, r5, lr}
-	mov r4, r0
-	mov r5, #200
+	push {r4, lr}
+	mov r4, #200
 
-	ldr r1, [r4, #GPCLR0]
-	orr r1, r1, #0x01 << pin_DirCW	// Set direction to clockwise
-	orr r1, r1, #0x01 << pin_nRSTCW	// Enable the motor driver
-	str r1, [r4, #GPCLR0]
+	ldr r0, [rGPIO, #GPCLR0]
+	orr r0, r0, #0x01 << pin_DirCW	// Set direction to clockwise
+	orr r0, r0, #0x01 << pin_nRSTCW	// Enable the motor driver
+	str r0, [rGPIO, #GPCLR0]
 
 cw_before_hall_loop:
 	bl color_wheel_step
 
-	ldr r1, [r4, #GPLEV0]
-	ands r1, r1, #0x01 << pin_nHallCW
+	ldr r0, [rGPIO, #GPLEV0]
+	ands r0, r0, #0x01 << pin_nHallCW
 	bne cw_before_hall_loop
 
 cw_at_hall_loop:
 	bl color_wheel_step
 	bl color_wheel_step
-	sub r5, r5, #1
+	sub r4, r4, #1
 
-	ldr r1, [r4, #GPLEV0]
-	ands r1, r1, #0x01 << pin_nHallCW
+	ldr r0, [rGPIO, #GPLEV0]
+	ands r0, r0, #0x01 << pin_nHallCW
 	beq cw_at_hall_loop
 
 cw_after_hall_loop:
 	bl color_wheel_step
-	subs r5, r5, #1
+	subs r4, r4, #1
 	bne cw_after_hall_loop
 
-	pop {r4, r5, lr}
+	pop {r4, lr}
 	bx lr
 
 color_wheel_rotate90:
+	push {r4, lr}
+	mov r4, #400
+
+cw_rotate90_loop:
+	bl color_wheel_step
+	subs r4, #1
+	bne cw_rotate90_loop
+
+	pop {r4, lr}
 	bx lr
 
 color_wheel_step:
 	push {lr}
 
-	ldr r1, [r4, #GPSET0]
-	orr r1, r1, #0x01 << pin_StepCW
-	str r1, [r4, #GPSET0]
+	ldr r0, [rGPIO, #GPSET0]
+	orr r0, r0, #0x01 << pin_StepCW
+	str r0, [rGPIO, #GPSET0]
 
-	ldr r0, #SLEEP_TIME_US
+	mov r0, #SLEEP_TIME_US
 	bl usleep
 
-	ldr r1, [r4, #GPCLR0]
-	orr r1, r1, #0x01 << pin_StepCW
-	str r1, [r4, #GPCLR0]
+	ldr r0, [rGPIO, #GPCLR0]
+	orr r0, r1, #0x01 << pin_StepCW
+	str r0, [rGPIO, #GPCLR0]
 
-	ldr r0, #SLEEP_TIME_US
+	mov r0, #SLEEP_TIME_US
 	bl usleep
 
 	pop {lr}

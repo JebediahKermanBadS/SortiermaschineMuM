@@ -167,6 +167,12 @@ main_loop:
 	mov r0, rGPIO
 	bl color_wheel_calibrate
 
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	bl color_wheel_rotate90
+
 main_end_unmap:
 	mov r0, rTIMER
 	bl munmmap_timerIR_mem
