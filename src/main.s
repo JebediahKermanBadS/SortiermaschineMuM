@@ -27,16 +27,10 @@
 	.equ pin_nRSTOut,	11
 	.equ pin_StepOut,	12
 
-@@@ Pins of the Color-Wheel --------------------------------------
-	.equ pin_StepCW,	13
-	.equ pin_DirCW,		16
-	.equ pin_nRSTCW,	17
-
 @@@ Pin of the Color-LEDs ----------------------------------------
 @@@	.equ ledSig, 		18
 
 @@@ Pins of the Hallsensor ---------------------------------------
-	.equ pin_nHallCW,		20
 	.equ pin_nHallOutlet,	21
 
 @@@ Pins for the color recognition -------------------------------
@@ -154,17 +148,24 @@ init_hardware:
 	@mov r0, rTIMER
 	@bl init_timerIR_registers
 
+	ldr r1, [rTIMER, #0x220]
+	bic r1, r1, #0b1111 << 17
+	//str r1, [rTIMER, #0x220]
+
 main_loop:
 
 	mov r0, rGPIO
 	bl set_feeder_on
 
-	@ Sleep 5 seconds
-	mov r0, #5
+	@ Sleep 2 seconds
+	mov r0, #2
 	bl sleep
 
 	mov r0, rGPIO
 	bl set_feeder_off
+
+	mov r0, rGPIO
+	bl color_wheel_calibrate
 
 main_end_unmap:
 	mov r0, rTIMER
