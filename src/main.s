@@ -10,9 +10,6 @@
 @@@	verison: 1.0.0
 @@@ --------------------------------------------------------------------------
 
-@@@ TODO REMOVE
-	.equ PAGE_SIZE, 		4096
-
 @@@ Pins of the 7-Segment Display --------------------------------
 	.equ pin_SER,		2
 	.equ pin_SRCLK,		3
@@ -37,9 +34,6 @@
 
 @@@ Pin of the Color-LEDs ----------------------------------------
 @@@	.equ ledSig, 		18
-
-@@@ Pin of the Feeder --------------------------------------------
-	.equ pin_feeder,	19
 
 @@@ Pins of the Hallsensor ---------------------------------------
 	.equ pin_nHallCW,		20
@@ -115,6 +109,10 @@ msg_print_hex: 	.asciz "%x\n"
 .extern init_output_input
 .extern init_timerIR_registers
 
+@ Methods for the feeder
+.extern set_feeder_on
+.extern set_feeder_off
+
 .global main
 main:
 	push {fp, lr}
@@ -158,20 +156,15 @@ init_hardware:
 
 main_loop:
 
-	@ Setting the feeder to on
-	ldr r1, [rGPIO, #GPSET0]
-	mov r4, #0x01
-	orr r1, r1, r4, LSL #19
-	str r1, [rGPIO, #GPSET0]
+	mov r0, rGPIO
+	bl set_feeder_on
 
 	@ Sleep 5 seconds
 	mov r0, #5
 	bl sleep
 
-	@ Setting the feeder to off
-	ldr r1, [rGPIO, #GPCLR0]
-	orr r1, r1, r4, LSL #19
-	str r1, [rGPIO, #GPCLR0]
+	mov r0, rGPIO
+	bl set_feeder_off
 
 main_end_unmap:
 	mov r0, rTIMER
@@ -185,9 +178,6 @@ main_end:
 	mov sp, fp
 	pop {fp, lr}
 	bx lr
-
-
-
 
 
 
