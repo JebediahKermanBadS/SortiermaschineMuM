@@ -62,17 +62,18 @@ cop_sleep:
 @@@ Reding the color bits and save it as an int
 @@@ Input: None
 @@@ Returns:
-@@@		r0 == 0: UNKNOWN
-@@@		r0 == 1: Red
-@@@		r0 == 2: Green
-@@@		r0 == 3: Blue
-@@@		r0 == 4: Brown
-@@@		r0 == 5: Orange
-@@@		r0 == 6: Yellow
+@@@		r0 == 0: Red
+@@@		r0 == 1: Green
+@@@		r0 == 2: Blue
+@@@		r0 == 3: Brown
+@@@		r0 == 4: Orange
+@@@		r0 == 5: Yellow
+@@@		r0 == -1: UNKNOWN
 cop_read_color:
 	ldr r0, [rGPIO, #GPLVL0]
 	and r0, r0, #0b111 << pin_colorBit1
 	lsr r0, r0, #pin_colorBit1
+	sub r0, r0, #1
 	bx lr
 
 
