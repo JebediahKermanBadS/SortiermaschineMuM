@@ -33,17 +33,10 @@
 @@@ Pins of the Hallsensor ---------------------------------------
 	.equ pin_nHallOutlet,	21
 
-@@@ Pins for the color recognition -------------------------------
-	.equ pin_colorBit1,	22
-	.equ pin_colorBit2,	23
-	.equ pin_colorBit3,	24
 
 @@@ Pins for the objectsensor in the outlet ----------------------
 	.equ pin_objCW,		25
 	.equ pin_dirOut,	26
-
-@@@ Pin to let the co-processor sleep ----------------------------
-	.equ pin_nSLP,		27
 
 
 
