@@ -36,6 +36,8 @@
 	rGPIO	.req r10
 .data
 
+@offset_flag counts how many times the outlet is rotated in one direction to
+@counter the resulting step offset
 .balign 4
 offset_flag:	.word 0
 
@@ -144,7 +146,7 @@ outlet_rotate60_counterclockwise:
 	mov r4, #67
 	ldr r5, =offset_flag
 	ldr r6, [r5]
-	add r6, #1
+	sub r6, #1
 
 	cmp r6, #-3
 	subeq r4, #1
