@@ -7,7 +7,7 @@
 //		- Pfister, Marc
 //  target:	 	Raspberry Pi Zero
 //    date:	 	2020/02/01
-// verison: 	1.0.0
+// version: 	1.0.0
 //----------------------------------------------------------------
 // This document deals with the following tasks:
 //		- Method to calibrate the color wheel

@@ -7,7 +7,7 @@
 @@@		- Pfister, Marc
 @@@ target:	 Raspberry Pi Zero
 @@@	date:	 2020/01/26
-@@@	verison: 1.0.0
+@@@	version: 1.0.0
 @@@ --------------------------------------------------------------------------
 
 @@@ Pins of the 7-Segment Display --------------------------------
