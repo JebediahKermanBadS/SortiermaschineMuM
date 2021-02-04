@@ -1,16 +1,19 @@
-@@@ M&M Sortingmachine
-@@@ --------------------------------------------------------------------------
-@@@ group members:
+@@@ -----------------------------------------------------------------------------------------
+@@@ Project:	M&M Sortingmachine
+@@@  Target:	Raspberry Pi Zero
+@@@	   Date:	2020/26/01
+@@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
-@@@ target:	 Raspberry Pi Zero
-@@@	date:	 2020/01/26
-@@@	version: 1.0.0
-@@@ --------------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 
-@@@ Pins of the 7-Segment Display --------------------------------
+@@@ Renamimg registers ----------------------------------------------------------------------
+	rTIMER	.req r9
+	rGPIO	.req r10
+
+@@@ Pins of the 7-Segment Display -----------------------------------------------------------
 	.equ pin_SER,		2
 	.equ pin_SRCLK,		3
 	.equ pin_nSRCLR,	4
@@ -18,39 +21,32 @@
 	.equ pin_SEG_A,		6
 	.equ pin_SEG_B,		7
 
-@@@ Pins of the Buttons ------------------------------------------
+@@@ Pins of the Buttons ---------------------------------------------------------------------
 	.equ pin_nBTN1,		8
 	.equ pin_nBTN2,		9
 	.equ pin_nBTN3,		10
 
-@@@ Pins of the Outlet -------------------------------------------
+@@@ Pins of the Outlet ----------------------------------------------------------------------
 	.equ pin_nRSTOut,	11
 	.equ pin_StepOut,	12
 
-@@@ Pin of the Color-LEDs ----------------------------------------
+@@@ Pin of the Color-LEDs -------------------------------------------------------------------
 @@@	.equ ledSig, 		18
 
-@@@ Pins of the Hallsensor ---------------------------------------
+@@@ Pins of the Hallsensor ------------------------------------------------------------------
 	.equ pin_nHallOutlet,	21
 
 
-@@@ Pins for the objectsensor in the outlet ----------------------
+@@@ Pins for the objectsensor in the outlet -------------------------------------------------
 	.equ pin_objCW,		25
 	.equ pin_dirOut,	26
 
 @@@ Define the offset for the GPIO Registers
-@@@ --------------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 	.equ GPSET0,	0x1C
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
 
-@@@ --------------------------------------------------------------
-@@@ Renamimg registers -------------------------------------------
-	rTIMER	.req r9
-	rGPIO	.req r10
-
-@@@ --------------------------------------------------------------
-@@@ Start Data Section -------------------------------------------
 .data
 .align 4
 
@@ -61,9 +57,6 @@ msg_timer_mem: 	.asciz "Timer memory is: %p\n"
 
 msg_print_int: 	.asciz "%d\n"
 msg_print_hex: 	.asciz "%x\n"
-
-@@@ --------------------------------------------------------------
-@@@ Start Text Section -------------------------------------------
 
 .text
 
