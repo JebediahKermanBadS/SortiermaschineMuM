@@ -38,23 +38,11 @@
 	.equ pin_objCW,		25
 	.equ pin_dirOut,	26
 
-
-
 @@@ Define the offset for the GPIO Registers
 @@@ --------------------------------------------------------------------------
 	.equ GPSET0,	0x1C
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
-
-@@@ --------------------------------------------------------------
-@@@ Colors from the Co-Prozessor ---------------------------------
-	.equ C_RED, 	0b001
-	.equ C_GREEN,	0b010
-	.equ C_BLUE,	0b011
-	.equ C_BRONW,	0b100
-	.equ C_ORANGE,	0b101
-	.equ C_YELLOW,	0b110
-	.equ C_UNKNOWN, 0b000
 
 @@@ --------------------------------------------------------------
 @@@ Renamimg registers -------------------------------------------
