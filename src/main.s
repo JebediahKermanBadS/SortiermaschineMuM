@@ -83,6 +83,9 @@ msg_print_hex: 	.asciz "%x\n"
 .extern set_feeder_on
 .extern set_feeder_off
 
+@ Methods for the leds
+.extern leds_Init
+
 .global main
 main:
 	push {fp, lr}
@@ -119,6 +122,10 @@ init_hardware:
 	mov r0, rGPIO
 	bl init_output_input
 
+	bl leds_Init
+
+	mov r0, #0
+	bl leds_showColor
 main_loop:
 
 	mov r0, rGPIO
