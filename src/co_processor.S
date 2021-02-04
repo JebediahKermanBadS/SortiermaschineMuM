@@ -72,8 +72,8 @@ cop_sleep:
 cop_read_color:
 	ldr r0, [rGPIO, #GPLVL0]
 	and r0, r0, #0b111 << pin_colorBit1
-	subs r0, r0, #0x01
 	lsr r0, r0, #pin_colorBit1
+	subs r0, r0, #0x01
 	bx lr
 
 
