@@ -12,7 +12,8 @@
 @@@ With this document its possible to control the Outlet.
 @@@ For this task it provides following methods:
 @@@		- Function to calibrate the Outlet.
-@@@		- Function to rotate the Outlet in 60 degree Steps
+@@@		- Functions to rotate the Outlet in 60 degree Steps
+@@@		  clockwise, counterclockwise respectively
 @@@ version: 	1.0.0
 @@@ ----------------------------------------------------------------
 
