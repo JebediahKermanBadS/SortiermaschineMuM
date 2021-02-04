@@ -119,15 +119,6 @@ init_hardware:
 	mov r0, rGPIO
 	bl init_output_input
 
-	@ TODO Uncommend this
-	@@@ Initialize the timer and interrupts
-	@mov r0, rTIMER
-	@bl init_timerIR_registers
-
-	ldr r1, [rTIMER, #0x220]
-	bic r1, r1, #0b1111 << 17
-	//str r1, [rTIMER, #0x220]
-
 main_loop:
 
 	mov r0, rGPIO

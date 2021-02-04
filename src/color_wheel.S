@@ -27,8 +27,6 @@
 	.equ GPCLR0,		0x28
 	.equ GPLEV0,		0x34
 
-	.equ SLEEP_TIME_US,	2000
-
 //  Renamimg registers -------------------------------------------
 	rGPIO	.req r10
 
@@ -36,6 +34,8 @@
 msg_hex: .asciz "%x\n"
 
 .text
+
+speed_in_us: .word 20000
 
 .global color_wheel_calibrate
 .global color_wheel_rotate90
@@ -45,9 +45,15 @@ color_wheel_calibrate:
 	mov r4, #200
 
 	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r0, #0x01 << pin_DirCW	// Set direction to clockwise
-	orr r0, r0, #0x01 << pin_nRSTCW	// Enable the motor driver
+	orr r0, r0, #0x01 << pin_DirCW	 // Set direction to clockwise
+	orr r0, r0, #0x01 << pin_nRSTCW	 // Enable the motor driver
 	str r0, [rGPIO, #GPCLR0]
+
+cw_hall_already_active:
+	bl color_wheel_step
+	ldr r0, [rGPIO, #GPLEV0]
+	ands r0, r0, #0x01 << pin_nHallCW
+	beq cw_hall_already_active
 
 cw_before_hall_loop:
 	bl color_wheel_step
@@ -92,14 +98,14 @@ color_wheel_step:
 	orr r0, r0, #0x01 << pin_StepCW
 	str r0, [rGPIO, #GPSET0]
 
-	mov r0, #SLEEP_TIME_US
+	ldr r0, speed_in_us
 	bl usleep
 
 	ldr r0, [rGPIO, #GPCLR0]
 	orr r0, r1, #0x01 << pin_StepCW
 	str r0, [rGPIO, #GPCLR0]
 
-	mov r0, #SLEEP_TIME_US
+	ldr r0, speed_in_us
 	bl usleep
 
 	pop {lr}
