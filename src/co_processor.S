@@ -1,7 +1,7 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/02/02
+@@@	   Date:	2020/02/04
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -15,23 +15,20 @@
 @@@ 	- Function to read the color bits
 @@@ -----------------------------------------------------------------------------------------
 
-	@@@ Pins definition for the co-processor ------------------------------------------------
+@@@ Renaming registers ----------------------------------------------------------------------
+	rGPIO	.req r10
+
+@@@ Pins definition for the co-processor ----------------------------------------------------
 	.equ pin_colorBit1,	22
 	.equ pin_colorBit2,	23
 	.equ pin_colorBit3,	24
-
 	.equ pin_nSLP,		27
 
-	@@@ Offsets for the GPIO Registers ------------------------------------------------------
+@@@ Offsets for the GPIO Registers ----------------------------------------------------------
 	.equ GPSET0,	0x1C
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
 
-	@@@ Renaming registers -------------------------------------------------------------------
-	rGPIO	.req r10
-
-@@@ -----------------------------------------------------------------------------------------
-@@@ Start of the text section ---------------------------------------------------------------
 .text
 
 .global cop_wakeup
@@ -39,29 +36,29 @@
 .global cop_read_color
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ Wake up the Co-Processor (Sets the nSLP-Pin to LOW)
-@@@ Input: None
-@@@ Returns: None
+@@@ Wake up the Co-Processor (Sets the nSLP-Pin to HIGH)
+@@@ Inputs: None
+@@@ Return: None
 cop_wakeup:
-	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r0, #0x01 << pin_nSLP
-	str r0, [rGPIO, #GPCLR0]
-	bx lr
-
-@@@ -----------------------------------------------------------------------------------------
-@@@ Let the Co-Processor sleep (Sets the nSLP-Pin to HIGH)
-@@@ Input: None
-@@@ Returns: None
-cop_sleep:
 	ldr r0, [rGPIO, #GPSET0]
 	orr r0, r0, #0x01 << pin_nSLP
 	str r0, [rGPIO, #GPSET0]
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
+@@@ Let the Co-Processor sleep (Sets the nSLP-Pin to LOW)
+@@@ Inputs: None
+@@@ Return: None
+cop_sleep:
+	ldr r0, [rGPIO, #GPCLR0]
+	orr r0, r0, #0x01 << pin_nSLP
+	str r0, [rGPIO, #GPCLR0]
+	bx lr
+
+@@@ -----------------------------------------------------------------------------------------
 @@@ Reading the color bits and save it as an int
-@@@ Input: None
-@@@ Returns:
+@@@ Inputs: None
+@@@ Return:
 @@@		r0 == -1: UNKNOWN
 @@@		r0 == 0: Red
 @@@		r0 == 1: Green

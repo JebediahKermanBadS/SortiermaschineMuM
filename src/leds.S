@@ -1,22 +1,24 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/02/02
+@@@	   Date:	2020/02/04
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
-@@@ Document description
+@@@ This document deals with the following tasks:
+@@@		- Method to init and deinit the leds
+@@@		- Method to set a led to a specific color
 @@@ -----------------------------------------------------------------------------------------
 
-
-	@ Constants for the leds ----------------------------------------------------------------
+@@@ Constants for the leds ------------------------------------------------------------------
 	.equ BRIGHTNESS, 50
 
 .data
 
+@@@ Define the colors for the leds as array with the size 6
 .align 4
 color_array:
 	.word 0xFF0000 @Red
@@ -36,7 +38,6 @@ hex_msg: .asciz "%x\n"
 
 .extern WS2812RPi_Init
 .extern WS2812RPi_DeInit
-
 .extern WS2812RPi_SetBrightness
 .extern WS2812RPi_SetSingle
 .extern WS2812RPi_SetOthersOff
@@ -44,9 +45,10 @@ hex_msg: .asciz "%x\n"
 .extern WS2812RPi_AnimDo
 .extern WS2812RPi_Show
 
-
-.extern printf
-
+@@@ -----------------------------------------------------------------------------------------
+@@@ This method initialize the leds
+@@@ Inputs: None
+@@@ Return: None
 leds_Init:
 	push {lr}
 
@@ -61,7 +63,10 @@ leds_Init:
 	pop {lr}
 	bx lr
 
-
+@@@ -----------------------------------------------------------------------------------------
+@@@ This method deinitialize the leds
+@@@ Inputs: None
+@@@ Return: None
 leds_DeInit:
 	push {lr}
 
@@ -70,7 +75,10 @@ leds_DeInit:
 	pop {lr}
 
 
-@@@ Input: color-core (Red = 0, Green = 1, ....
+@@@ -----------------------------------------------------------------------------------------
+@@@ This method sets the color of a led
+@@@ Inputs: r0: (0 = Red, 1 = Green, 2 = Blue, 3 = Brown, 4 = Orange, 5 = Yellow)
+@@@ Return: None
 leds_showColor:
 	push {lr}
 
