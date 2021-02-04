@@ -139,7 +139,7 @@ outlet_rotate60_clockwise_loop:
 @@@ Inputs: None
 @@@ Returns: None
 
-outlet_rotate60_clockwise:
+outlet_rotate60_counterclockwise:
 	push {r4, r5, r6, lr}
 	mov r4, #67
 	ldr r5, =offset_flag
