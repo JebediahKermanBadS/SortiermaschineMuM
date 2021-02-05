@@ -133,7 +133,7 @@ outlet_rotate60_clockwise_loop:
 	subs r4, #1
 	bne outlet_rotate60_clockwise_loop
 
-	pop{r4, r5, r6, lr}
+	pop {r4, r5, r6, lr}
 	bx lr
 
 @@@ ----------------------------------------------------------------------------------------
