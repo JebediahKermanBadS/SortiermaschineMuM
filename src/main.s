@@ -63,6 +63,11 @@ msg_print_hex: 	.asciz "%x\n"
 .extern printf
 .extern sleep
 
+@ Methods for the feeder
+.extern feeder_init
+.extern feeder_on
+.extern feeder_off
+
 @ From memory_access.S
 .extern mmap_gpio
 .extern mmap_timerIR
@@ -71,10 +76,6 @@ msg_print_hex: 	.asciz "%x\n"
 @ From sortmachine_pin.S
 .extern init_output_input
 .extern init_timerIR_registers
-
-@ Methods for the feeder
-.extern set_feeder_on
-.extern set_feeder_off
 
 @ Methods for the leds
 .extern leds_Init
@@ -112,9 +113,11 @@ main:
 init_hardware:
 
 	@@@ Initialize the inputs and outputs for the machine
-	mov r0, rGPIO
-	bl init_output_input
+	@@@ TODO: Uncomment
+	@@@ mov r0, rGPIO
+	@@@ bl init_output_input
 
+	bl feeder_init
 	bl leds_Init
 
 	mov r0, #0
@@ -122,14 +125,14 @@ init_hardware:
 main_loop:
 
 	mov r0, rGPIO
-	bl set_feeder_on
+	bl feeder_on
 
 	@ Sleep 2 seconds
 	mov r0, #2
 	bl sleep
 
 	mov r0, rGPIO
-	bl set_feeder_off
+	bl feeder_off
 
 	mov r0, rGPIO
 	bl color_wheel_calibrate
