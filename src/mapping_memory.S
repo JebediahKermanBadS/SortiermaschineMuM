@@ -1,18 +1,17 @@
-@@@ M&M Sortingmachine
-@@@ -------------------------------------------------------------------
-@@@ group members:
+@@@ -----------------------------------------------------------------------------------------
+@@@ Project:	M&M Sortingmachine
+@@@  Target:	Raspberry Pi Zero
+@@@	   Date:	2020/27/01
+@@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
-@@@ target:	 Raspberry Pi Zero
-@@@	date:	 2020/01/27
-@@@	verison: 1.0.0
-@@@ -------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 @@@ This document deals with the following tasks:
 @@@		- Method to get access to the gpio memory
 @@@ 	- Method to get access to the memory for timers and interrupts
-@@@ -------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 
 @@@ Constants defining the flags for opening the gpiomem file
 @@@ Defined in /usr/include/asm-generic/fcntl.h
@@ -36,8 +35,6 @@
 	.equ FILE_OPEN_ERROR,	-1
 	.equ ERROR_CODE,		-1
 
-@@@ -------------------------------------------------------------------
-@@@ Start Data Section ------------------------------------------------
 .data
 
 @@@ File names
@@ -49,8 +46,6 @@ file_open_failure: .asciz "Failure! Cant open the file %s. Try execute with sudo
 file_close_failure: .asciz "Failure! Not possible to close the file %s correctly.\n"
 unmap_failure: .asciz "Failure unmapping the virtual address: %p\n"
 
-@@@ -------------------------------------------------------------------
-@@@ Start Text Section ------------------------------------------------
 .text
 
 .global mmap_gpio
@@ -71,11 +66,10 @@ timerIR: 	.word PERIPH + TIMERIR_OFFSET
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Creates a virtual address to access the gpio registers
-@@@ Input paramter:
-@@@		- None
-@@@ Returns:
-@@@		- r0: 	The virtual adddress
-@@@				If (r0 == -1) --> Error! Don't use this as address ;)
+@@@ Inputs: None
+@@@ Return:
+@@@		r0: The virtual adddress
+@@@			If (r0 == -1) --> Error! Don't use this as address ;)
 mmap_gpio:
 	push {lr}
 
@@ -88,11 +82,10 @@ mmap_gpio:
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Creates a virtual address to access the timer and interrupt registers
-@@@ Input paramter:
-@@@		- None
-@@@ Returns:
-@@@		- r0: 	The virtual adddress
-@@@				If (r0 == -1) --> Error! Don't use this as address ;)
+@@@ Inputs: None
+@@@ Return:
+@@@		r0: The virtual adddress
+@@@			If (r0 == -1) --> Error! Don't use this as address ;)
 mmap_timerIR:
 	push {lr}
 
@@ -105,10 +98,9 @@ mmap_timerIR:
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Unmaps a virutal address
-@@@ Input paramter:
-@@@		- r0: 	The virtual address
-@@@ Returns:
-@@@		- Nothing
+@@@ Inputs:
+@@@		r0: The virtual address
+@@@ Return: None
 unmap_memory:
 	push {lr}
 
@@ -126,12 +118,12 @@ unmap_memory:
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Creates a virtual address from a specific file
-@@@ Input paramter:
-@@@		- r0: 	The filename
-@@@		- r1: 	The offset for the register
-@@@ Returns:
-@@@		- r0: 	The virtual adddress
-@@@				If (r0 == -1) --> Error! Don't use this as address ;)
+@@@ Inputs:
+@@@		r0: The filename
+@@@		r1: The offset for the register
+@@@ Return:
+@@@		r0: The virtual adddress
+@@@			If (r0 == -1) --> Error! Don't use this as address ;)
 mapFileToMemory:
 	push {r0, fp, lr}
 	mov fp, sp

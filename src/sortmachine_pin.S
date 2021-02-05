@@ -1,27 +1,24 @@
-@@@ M&M Sortingmachine
-@@@ --------------------------------------------------------------
-@@@ group members:
+@@@ -----------------------------------------------------------------------------------------
+@@@ Project:	M&M Sortingmachine
+@@@  Target:	Raspberry Pi Zero
+@@@	   Date:	2020/27/01
+@@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
-@@@ target:	 Raspberry Pi Zero
-@@@	date:	 2020/01/27
-@@@	verison: 1.0.0
-@@@ --------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 @@@ This document deals with the following tasks:
 @@@		- Method to initialize this pins as Output/Input
 @@@ 	- Method to initialize the timer and interrupts
-@@@ --------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 
-@@@ Define the GPIO Function Select Register Offsets -------------
+@@@ Define the GPIO Function Select Register Offsets ----------------------------------------
 	.equ GPFSEL0, 	0x00
 	.equ GPFSEL1, 	0x04
 	.equ GPFSEL2, 	0x08
-@@@ --------------------------------------------------------------
 
-@@@ --------------------------------------------------------------
-@@@ Start Data Section -------------------------------------------
 .data
 msg_hex: .asciz "%xh\n"
 
@@ -41,23 +38,20 @@ gpio_resetdef_fsel2:	@ 1111 1100 0000 0000 0000 0000 0000 0000
 gpio_outputdef_fsel2:	@ 0000 0000 0010 0100 0000 0000 0000 0000
 				.word 	0x00240000
 
-@@@ Start Textsection -------------------------------------------
-@@@ -------------------------------------------------------------
 .text
 
 .global init_output_input
 .global init_timerIR_registers
 
-@@@ --------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 @@@ This defines the pins as output/input
-@@@ Input paramter:
+@@@ Inputs:
 @@@ 	r0: The virtual gpio address
-@@@ Returns: Nothing
-@@@ --------------------------------------------------------------
+@@@ Returns: None
 init_output_input:
 	push {lr}
 
-@@@ Start defining the first GPIO Function select register -------
+@@@ Start defining the first GPIO Function select register ----------------------------------
 	ldr r1, [r0, #GPFSEL0]
 
 	@ Define pins 2-9 as input
@@ -71,9 +65,9 @@ init_output_input:
 	orr r1, r1, r2
 
 	str r1, [r0, #GPFSEL0]
-@@@ --------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 
-@@@ Start defining of the second GPIO Function select register ---
+@@@ Start defining of the second GPIO Function select register ------------------------------
 	ldr r1, [r0, #GPFSEL1]
 
 	@ Clear the pins used in the machine, dont change others
@@ -87,9 +81,8 @@ init_output_input:
 	orr r1, r1, r2
 
 	str r1, [r0, #GPFSEL1]
-@@@ --------------------------------------------------------------
 
-@@@ Start defining of the third GPIO Function select register ----
+@@@ Start defining of the third GPIO Function select register -------------------------------
 	ldr r1, [r0, #GPFSEL2]
 
 	@ Clear the pins used in the machine, dont change others
@@ -103,18 +96,16 @@ init_output_input:
 	orr r1, r1, r2
 
 	str r1, [r0, #GPFSEL2]
-@@@ --------------------------------------------------------------
 
 	pop {lr}
 	bx lr
 
 
-@@@ --------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 @@@ This function initializes the timer and interrupts
-@@@ Input paramter:
+@@@ Inputs:
 @@@ 	r0: The virtual memory address
-@@@ Returns: Nothing
-@@@ --------------------------------------------------------------
+@@@ Return: None
 init_timerIR_registers:
 	push {lr}
 
@@ -147,8 +138,6 @@ init_timerIR_registers:
 
 	pop {lr}
 	bx lr
-
-@@@ --------------------------------------------------------------
 
 
 

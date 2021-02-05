@@ -1,37 +1,33 @@
-//----------------------------------------------------------------
-// project: 	M&M Sortmachine
-// group members:
-//		- Demiroez, Dilara
-//		- Gonther, Levin
-//		- Grajczak, Benjamin
-//		- Pfister, Marc
-//  target:	 	Raspberry Pi Zero
-//    date:	 	2020/02/01
-// version: 	1.0.0
-//----------------------------------------------------------------
-// This document deals with the following tasks:
-//		- Method to calibrate the color wheel
-//		- Method to roate the color wheel in 90° steps
-//----------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
+@@@ Project:	M&M Sortingmachine
+@@@  Target:	Raspberry Pi Zero
+@@@	   Date:	2020/02/04
+@@@ Group members:
+@@@		- Demiroez Dilara
+@@@		- Gonther, Levin
+@@@		- Grajczak, Benjamin
+@@@		- Pfister, Marc
+@@@ -----------------------------------------------------------------------------------------
+@@@ This document deals with the following tasks:
+@@@		- Method to calibrate the color wheel
+@@@		- Method to roate the color wheel in 90° steps
+@@@ -----------------------------------------------------------------------------------------
 
-// Pins of the Color-Wheel ---------------------------------------
+@@@ Renamimg registers ----------------------------------------------------------------------
+	rGPIO	.req r10
+
+@@@ Pins of the Color-Wheel -----------------------------------------------------------------
 	.equ pin_StepCW,	13
 	.equ pin_DirCW,		16
 	.equ pin_nRSTCW,	17
 
-// Pins for the Hallsensor ---------------------------------------
+@@@ Pins for the Hallsensor -----------------------------------------------------------------
 	.equ pin_nHallCW,	20
 
-//  Register offsets to set pins on and off ----------------------
+@@@ Register offsets to set pins on and off -------------------------------------------------
 	.equ GPSET0,		0x1C
 	.equ GPCLR0,		0x28
 	.equ GPLEV0,		0x34
-
-//  Renamimg registers -------------------------------------------
-	rGPIO	.req r10
-
-.data
-msg_hex: .asciz "%x\n"
 
 .text
 
@@ -40,14 +36,18 @@ speed_in_us: .word 20000
 .global color_wheel_calibrate
 .global color_wheel_rotate90
 
+@@@ -----------------------------------------------------------------------------------------
+@@@ Calibrate the color-wheel with the hall-sensor. Call this in the beggining of the program
+@@@ Inputs: None
+@@@ Return: None
 color_wheel_calibrate:
 	push {r4, lr}
 	mov r4, #200
 
-	ldr r0, [rGPIO, #GPCLR0]
+	ldr r0, [rGPIO, #GPSET0]
 	orr r0, r0, #0x01 << pin_DirCW	 // Set direction to clockwise
 	orr r0, r0, #0x01 << pin_nRSTCW	 // Enable the motor driver
-	str r0, [rGPIO, #GPCLR0]
+	str r0, [rGPIO, #GPSET0]
 
 cw_hall_already_active:
 	bl color_wheel_step
@@ -79,6 +79,10 @@ cw_after_hall_loop:
 	pop {r4, lr}
 	bx lr
 
+@@@ -----------------------------------------------------------------------------------------
+@@@ Make 400 Steps wiht the color-wheel. This is exactly a rotation of 90 degrees
+@@@ Inputs: None
+@@@ Return: None
 color_wheel_rotate90:
 	push {r4, lr}
 	mov r4, #400
@@ -91,6 +95,10 @@ cw_rotate90_loop:
 	pop {r4, lr}
 	bx lr
 
+@@@ -----------------------------------------------------------------------------------------
+@@@ Make a step with the color wheel
+@@@ Inputs: None
+@@@ Return: None
 color_wheel_step:
 	push {lr}
 

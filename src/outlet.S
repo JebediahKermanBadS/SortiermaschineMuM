@@ -1,44 +1,43 @@
-@@@----------------------------------------------------------------
-@@@ project: 	M&M Sortmachine
-@@@ group members:
-@@@		- Demiroez, Dilara
+@@@ -----------------------------------------------------------------------------------------
+@@@ Project:	M&M Sortingmachine
+@@@  Target:	Raspberry Pi Zero
+@@@	   Date:	2020/04/02
+@@@ Group members:
+@@@		- Demiroez Dilara
 @@@		- Gonther, Levin
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
-@@@  target:	 	Raspberry Pi Zero
-@@@    date:	 	2020/02/04
-@@@ version: 	1.0.0
-@@@ ----------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 @@@ With this document its possible to control the Outlet.
 @@@ For this task it provides following methods:
 @@@		- Function to calibrate the Outlet.
 @@@		- Functions to rotate the Outlet in 60 degree Steps
 @@@		  clockwise, counterclockwise respectively
-@@@ version: 	1.0.0
-@@@ ----------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 
+@@@  Renamimg registers --------------------------------------------------------------------
+	rGPIO	.req r10
 
-@@@ Pins of the Outlet ---------------------------------------------
+@@@ Pins of the Outlet ----------------------------------------------------------------------
 	.equ pin_nRSTOut,	11
 	.equ pin_StepOut,	12
 	.equ pin_DirOut,	26
 
-@@ Pin for the Hallsensor ------------------------------------------
+@@@ Pin for the Hallsensor ------------------------------------------------------------------
 	.equ pin_nHallOutlet,	21
 
-@@@ Register offsets to set pins on and off ------------------------
+@@@ Register offsets to set pins on and off -------------------------------------------------
 	.equ GPSET0,		0x1C
 	.equ GPCLR0,		0x28
 	.equ GPLEV0,		0x34
 
 	.equ SLEEP_TIME_US,	2000
 
-@@@  Renamimg registers --------------------------------------------
-	rGPIO	.req r10
 .data
 
-@offset_flag counts how many times the outlet is rotated in one direction to
-@counter the resulting step offset
+@ offset_flag counts how many times the outlet is rotated in one direction to counter the
+@ resulting step offset
 .balign 4
 offset_flag:	.word 0
 
@@ -48,10 +47,10 @@ offset_flag:	.word 0
 .global outlet_rotate60_clockwise
 .global outlet_rotate60_counterclockwise
 
-@@@ ----------------------------------------------------------------
+@@@ ----------------------------------------------------------------------------------------
 @@@ Calibrate the Outlet to Start Position
 @@@ Inputs: None
-@@@ Returns: None
+@@@ Return: None
 outlet_calibrate:
 	push {r4, lr}
 	mov r4, #0
@@ -109,10 +108,10 @@ outlet_step:
 	pop {lr}
 	bx lr
 
-@@@ ----------------------------------------------------------------
+@@@ ----------------------------------------------------------------------------------------
 @@@ Rotate the Outlet in 60 degree Steps clockwise
 @@@ Inputs: None
-@@@ Returns: None
+@@@ Return: None
 outlet_rotate60_clockwise:
 	push {r4, r5, r6, lr}
 	mov r4, #67
@@ -137,10 +136,10 @@ outlet_rotate60_clockwise_loop:
 	pop{r4, r5, r6, lr}
 	bx lr
 
-@@@ ----------------------------------------------------------------
+@@@ ----------------------------------------------------------------------------------------
 @@@ Rotate the Outlet in 60 degree Steps counterclockwise
 @@@ Inputs: None
-@@@ Returns: None
+@@@ Return: None
 
 outlet_rotate60_counterclockwise:
 	push {r4, r5, r6, lr}
@@ -163,5 +162,5 @@ outlet_rotate60_counterclockwise_loop:
 	subs r4, #1
 	bne outlet_rotate60_counterclockwise_loop
 
-	pop{r4, r5, r6, lr}
+	pop {r4, r5, r6, lr}
 	bx lr
