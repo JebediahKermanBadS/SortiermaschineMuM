@@ -63,19 +63,20 @@ msg_print_hex: 	.asciz "%x\n"
 .extern printf
 .extern sleep
 
-@ Methods for the feeder
+@@@ Methods from the feeder.S ---------------------------------------------------------------
 .extern feeder_init
 .extern feeder_on
 .extern feeder_off
 
-@ From memory_access.S
+@@@ Methods from the color_wheel.S ----------------------------------------------------------
+.extern color_wheel_init
+.extern color_wheel_calibrate
+.extern color_wheel_rotate90
+
+@@@ Methods from the mapping_memory.S -------------------------------------------------------
 .extern mmap_gpio
 .extern mmap_timerIR
 .extern unmap_memory
-
-@ From sortmachine_pin.S
-.extern init_output_input
-.extern init_timerIR_registers
 
 @ Methods for the leds
 .extern leds_Init
@@ -118,6 +119,7 @@ init_hardware:
 	@@@ bl init_output_input
 
 	bl feeder_init
+	bl color_wheel_init
 	bl leds_Init
 
 	mov r0, #0
