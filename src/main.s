@@ -50,28 +50,36 @@ msg_print_hex: 	.asciz "%x\n"
 .extern printf
 .extern sleep
 
-@@@ Methods from the feeder.S ---------------------------------------------------------------
-.extern feeder_init
-.extern feeder_on
-.extern feeder_off
-
-@@@ Methods from the color_wheel.S ----------------------------------------------------------
-.extern color_wheel_init
-.extern color_wheel_calibrate
-.extern color_wheel_rotate90
-
 @@@ Methods from the co_processor.S ---------------------------------------------------------
 .extern cop_init
 .extern cop_wakeup
 .extern cop_sleep
 .extern cop_read_color
 
-@@@ Methods from the mapping_memory.S -------------------------------------------------------
+@@@ Methods from the color_wheel.S ----------------------------------------------------------
+.extern color_wheel_init
+.extern color_wheel_calibrate
+.extern color_wheel_rotate90
+
+@@@ Methods from the feeder.S ---------------------------------------------------------------
+.extern feeder_init
+.extern feeder_on
+.extern feeder_off
+
+@@@ Methods from leds.S ---------------------------------------------------------------------
+.global leds_Init
+.global leds_DeInit
+.global leds_showColor
+
+@@@ Methods from mapping_memory.S -----------------------------------------------------------
 .extern mmap_gpio
 .extern unmap_memory
 
-@ Methods for the leds
-.extern leds_Init
+@@@ Methods from outlet.S -------------------------------------------------------------------
+.extern outlet_init
+.extern outlet_calibrate
+.extern outlet_rotate60_clockwise
+.extern outlet_rotate60_counterclockwise
 
 .global main
 main:
@@ -94,10 +102,11 @@ main:
 
 init_hardware:
 
-	bl feeder_init
-	bl color_wheel_init
 	bl cop_init
+	bl color_wheel_init
+	bl feeder_init
 	bl leds_Init
+	bl outlet_init
 
 main_loop:
 

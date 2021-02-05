@@ -49,12 +49,12 @@
 cop_init:
 	ldr r0, [rGPIO, #GPFSEL2]
 
-	bic r0, r0, #111 << colorBit1_IO_BIT
-	bic r0, r0, #111 << colorBit2_IO_BIT
-	bic r0, r0, #111 << colorBit3_IO_BIT
+	bic r0, r0, #0b111 << colorBit1_IO_BIT
+	bic r0, r0, #0b111 << colorBit2_IO_BIT
+	bic r0, r0, #0b111 << colorBit3_IO_BIT
 
-	bic r0, r0, #111 << nSLP_IO_BIT
-	orr r0, r0, #OUTPUT << nSLP_IO_BIT
+	bic r0, r0, #0b111 << nSLP_IO_BIT
+	orr r0, r0, #0b001 << nSLP_IO_BIT
 
 	str r0, [rGPIO, #GPFSEL2]
 	bx lr
@@ -94,7 +94,7 @@ cop_read_color:
 	ldr r0, [rGPIO, #GPLVL0]
 	and r0, r0, #0b111 << colorBit1_PIN
 	lsr r0, r0, #colorBit1_PIN
-	subs r0, r0, #0x01
+	subs r0, r0, #1
 	bx lr
 
 
