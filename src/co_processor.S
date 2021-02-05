@@ -19,18 +19,25 @@
 	rGPIO	.req r10
 
 @@@ Pins definition for the co-processor ----------------------------------------------------
-	.equ pin_colorBit1,	22
-	.equ pin_colorBit2,	23
-	.equ pin_colorBit3,	24
-	.equ pin_nSLP,		27
+	.equ colorBit1_PIN,		22
+	.equ colorBit2_PIN,		23
+	.equ colorBit3_PIN,		24
+	.equ nSLP_PIN,			27	@ 0 = Sleep, 1 = Wakeup
+
+	.equ colorBit1_IO_BIT,	6
+	.equ colorBit2_IO_BIT,	9
+	.equ colorBit3_IO_BIT,	12
+	.equ nSLP_IO_BIT,		21
 
 @@@ Offsets for the GPIO Registers ----------------------------------------------------------
+	.equ GPFSEL2, 	0x08
 	.equ GPSET0,	0x1C
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
 
 .text
 
+.global cop_init
 .global cop_wakeup
 .global cop_sleep
 .global cop_read_color
@@ -39,9 +46,26 @@
 @@@ Wake up the Co-Processor (Sets the nSLP-Pin to HIGH)
 @@@ Inputs: None
 @@@ Return: None
+cop_init:
+	ldr r0, [rGPIO, #GPFSEL2]
+
+	bic r0, r0, #111 << colorBit1_IO_BIT
+	bic r0, r0, #111 << colorBit2_IO_BIT
+	bic r0, r0, #111 << colorBit3_IO_BIT
+
+	bic r0, r0, #111 << nSLP_IO_BIT
+	orr r0, r0, #OUTPUT << nSLP_IO_BIT
+
+	str r0, [rGPIO, #GPFSEL2]
+	bx lr
+
+@@@ -----------------------------------------------------------------------------------------
+@@@ Wake up the Co-Processor (Sets the nSLP-Pin to HIGH)
+@@@ Inputs: None
+@@@ Return: None
 cop_wakeup:
 	ldr r0, [rGPIO, #GPSET0]
-	orr r0, r0, #0x01 << pin_nSLP
+	orr r0, r0, #0x01 << nSLP_PIN
 	str r0, [rGPIO, #GPSET0]
 	bx lr
 
@@ -51,7 +75,7 @@ cop_wakeup:
 @@@ Return: None
 cop_sleep:
 	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r0, #0x01 << pin_nSLP
+	orr r0, r0, #0x01 << nSLP_PIN
 	str r0, [rGPIO, #GPCLR0]
 	bx lr
 
@@ -68,8 +92,8 @@ cop_sleep:
 @@@		r0 == 5: Yellow
 cop_read_color:
 	ldr r0, [rGPIO, #GPLVL0]
-	and r0, r0, #0b111 << pin_colorBit1
-	lsr r0, r0, #pin_colorBit1
+	and r0, r0, #0b111 << colorBit1_PIN
+	lsr r0, r0, #colorBit1_PIN
 	subs r0, r0, #0x01
 	bx lr
 

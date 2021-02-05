@@ -10,7 +10,6 @@
 @@@ -----------------------------------------------------------------------------------------
 
 @@@ Renamimg registers ----------------------------------------------------------------------
-	rTIMER	.req r9
 	rGPIO	.req r10
 
 @@@ Pins of the 7-Segment Display -----------------------------------------------------------
@@ -26,23 +25,11 @@
 	.equ pin_nBTN2,		9
 	.equ pin_nBTN3,		10
 
-@@@ Pins of the Outlet ----------------------------------------------------------------------
-	.equ pin_nRSTOut,	11
-	.equ pin_StepOut,	12
-
-@@@ Pin of the Color-LEDs -------------------------------------------------------------------
-@@@	.equ ledSig, 		18
-
-@@@ Pins of the Hallsensor ------------------------------------------------------------------
-	.equ pin_nHallOutlet,	21
-
-
 @@@ Pins for the objectsensor in the outlet -------------------------------------------------
 	.equ pin_objCW,		25
 	.equ pin_dirOut,	26
 
-@@@ Define the offset for the GPIO Registers
-@@@ -----------------------------------------------------------------------------------------
+@@@ Define the offset for the GPIO Registers ------------------------------------------------
 	.equ GPSET0,	0x1C
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
@@ -73,9 +60,14 @@ msg_print_hex: 	.asciz "%x\n"
 .extern color_wheel_calibrate
 .extern color_wheel_rotate90
 
+@@@ Methods from the co_processor.S ---------------------------------------------------------
+.extern cop_init
+.extern cop_wakeup
+.extern cop_sleep
+.extern cop_read_color
+
 @@@ Methods from the mapping_memory.S -------------------------------------------------------
 .extern mmap_gpio
-.extern mmap_timerIR
 .extern unmap_memory
 
 @ Methods for the leds
@@ -95,35 +87,18 @@ main:
 	cmp rGPIO, #-1
 	beq main_end
 
-	@ Map the virtual address for the timer and interrupt register
-	bl mmap_timerIR
-	mov rTIMER, r0
-	cmp rTIMER, #-1
-	beq main_munmap_pgpio
-
 	@ Print the virtual address for the gpio reigsters
 	ldr r0, =msg_gpio_mem
 	mov r1, rGPIO
 	bl printf
 
-	@ Print the virutal address for the timer registers
-	ldr r0, =msg_timer_mem
-	mov r1, rTIMER
-	bl printf
-
 init_hardware:
-
-	@@@ Initialize the inputs and outputs for the machine
-	@@@ TODO: Uncomment
-	@@@ mov r0, rGPIO
-	@@@ bl init_output_input
 
 	bl feeder_init
 	bl color_wheel_init
+	bl cop_init
 	bl leds_Init
 
-	mov r0, #0
-	bl leds_showColor
 main_loop:
 
 	mov r0, rGPIO
@@ -144,10 +119,6 @@ main_loop:
 	bl sleep
 
 	bl color_wheel_rotate90
-
-main_end_unmap:
-	mov r0, rTIMER
-	bl unmap_memory
 
 main_munmap_pgpio:
 	mov r0, rGPIO

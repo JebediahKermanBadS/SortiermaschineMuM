@@ -9,6 +9,7 @@
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
 @@@ This document deals with the following tasks:
+@@@		- Method to init the feeder pin
 @@@		- Method to set the feeder on
 @@@	 	- Method to set the feeder off
 @@@ -----------------------------------------------------------------------------------------
