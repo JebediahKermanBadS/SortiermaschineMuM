@@ -67,9 +67,9 @@ msg_print_hex: 	.asciz "%x\n"
 .extern feeder_off
 
 @@@ Methods from leds.S ---------------------------------------------------------------------
-.global leds_Init
-.global leds_DeInit
-.global leds_showColor
+.extern leds_Init
+.extern leds_DeInit
+.extern leds_showColor
 
 @@@ Methods from mapping_memory.S -----------------------------------------------------------
 .extern mmap_gpio
@@ -128,6 +128,7 @@ main_loop:
 	bl sleep
 
 	bl color_wheel_rotate90
+
 
 main_munmap_pgpio:
 	mov r0, rGPIO

@@ -43,14 +43,10 @@
 
 @ offset_flag counts how many times the outlet is rotated in one direction to counter the
 @ resulting step offset
-.balign 4
+.align 4
 offset_flag:	.word 0
 
-.extern outlet_init
-.extern outlet_calibrate
-.extern outlet_rotate60_clockwise
-.extern outlet_rotate60_counterclockwise
-
+.global outlet_init
 .global outlet_calibrate
 .global outlet_rotate60_clockwise
 .global outlet_rotate60_counterclockwise
