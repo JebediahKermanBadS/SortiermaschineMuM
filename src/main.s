@@ -45,6 +45,17 @@ msg_timer_mem: 	.asciz "Timer memory is: %p\n"
 msg_print_int: 	.asciz "%d\n"
 msg_print_hex: 	.asciz "%x\n"
 
+.align 4
+color_array: .word 0
+			 .word 1
+			 .word 2
+			 .word 3
+			 .word -2
+			 .word -1
+
+.align 4
+outlet_position: .word 0
+
 .text
 
 .extern printf
@@ -128,6 +139,34 @@ main_loop:
 	bl sleep
 
 	bl color_wheel_rotate90
+
+	@@ position outlet
+	ldr r2, =color_array
+	ldr r3, =outlet_position
+	ldr r1, [r3]
+
+	@ calculate offset
+	subs r1, r0, r1
+	addmi r1, r1, #6
+	str r1, [r3]
+	mov r1, r1, LSL #2
+
+	ldr r1, [r2, +r1]
+
+	@move outlet
+	cmp r1, #0
+	blt counterclockwise
+	beq no_rotation
+	clockwise:
+		bl outlet_rotate60_clockwise
+		subs r1, #1
+		bpl clockwise
+		beq no_rotation
+	counterclockwise:
+		bl outlet_rotate60_counterclockwise
+		adds r1, #1
+		bmi counterclockwise
+	no_rotation:
 
 
 main_munmap_pgpio:
