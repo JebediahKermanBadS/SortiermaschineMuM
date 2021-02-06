@@ -41,6 +41,10 @@ feeder_init:
 	bic r0, r0, #0b111 << feeder_io_bit
 	orr r0, r0, #0b001 << feeder_io_bit
 	str r0, [rGPIO, #GPFSEL1]
+
+	mov r0, #1 << feeder_pin
+	str r0, [rGPIO, #GPCLR0]
+
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
@@ -48,8 +52,7 @@ feeder_init:
 @@@ Inputs: None
 @@@ Return: None
 feeder_on:
-	ldr r0, [rGPIO, #GPSET0]
-	orr r0, r0, #0x01 << feeder_pin
+	mov r0, #0x01 << feeder_pin
 	str r0, [rGPIO, #GPSET0]
 
 	bx lr
@@ -59,8 +62,7 @@ feeder_on:
 @@@ Inputs: None
 @@@ Return: None
 feeder_off:
-	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r0, #0x01 << feeder_pin
+	mov r0, #0x01 << feeder_pin
 	str r0, [rGPIO, #GPCLR0]
 
 	bx lr

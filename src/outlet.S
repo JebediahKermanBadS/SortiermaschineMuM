@@ -37,9 +37,9 @@
 	.equ GPCLR0,	0x28
 	.equ GPLEV0,	0x34
 
-	.equ SLEEP_TIME_US,	2000
-
 .data
+
+speed_in_us: .word 20000
 
 @ offset_flag counts how many times the outlet is rotated in one direction to counter the
 @ resulting step offset
@@ -75,6 +75,11 @@ outlet_init:
 
 	str r0, [rGPIO, #GPFSEL2]
 
+	mov r0, #1 << DirOut_PIN
+	orr r0, r0, #1 << StepOut_PIN
+	orr r0, r0, #1 << nRSTOut_PIN
+	str r0, [rGPIO, #GPCLR0]
+
 	bx lr
 
 @@@ ----------------------------------------------------------------------------------------
@@ -85,8 +90,7 @@ outlet_calibrate:
 	push {r4, lr}
 	mov r4, #0
 
-	ldr r0, [rGPIO, #GPSET0]
-	orr r0, r0, #0x01 << DirOut_PIN		@ Set direction to clockwise
+	mov r0, #0x01 << DirOut_PIN			@ Set direction to clockwise
 	orr r0, r0, #0x01 << nRSTOut_PIN	@ Enable the motor driver
 	str r0, [rGPIO, #GPSET0]
 
@@ -95,7 +99,7 @@ outlet_before_hall_loop:
 
 	ldr r0, [rGPIO, #GPLEV0]
 	ands r0, r0, #0x01 << nHallOutlet_PIN
-	bne outlet_before_hall_loop
+	beq outlet_before_hall_loop
 
 outlet_at_hall_loop:
 	bl outlet_step
@@ -103,17 +107,16 @@ outlet_at_hall_loop:
 
 	ldr r0, [rGPIO, #GPLEV0]
 	ands r0, r0, #0x01 << nHallOutlet_PIN
-	beq outlet_at_hall_loop
+	bne outlet_at_hall_loop
 
-	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r0, #0x01 << DirOut_PIN @Set direction to counterclockwise
+	mov r0, #0x01 << DirOut_PIN @Set direction to counterclockwise
 	str r0, [rGPIO, #GPCLR0]
 	mov r4, r4, LSR #1
 
 outlet_after_hall_loop:
 	bl outlet_step
 	subs r4, r4, #1
-	bne outlet_after_hall_loop
+	beq outlet_after_hall_loop
 
 	pop {r4, lr}
 	bx lr
@@ -134,8 +137,7 @@ outlet_rotate60_clockwise:
 	moveq r6, #0
 	str r6, [r5]
 
-	ldr r0, [rGPIO, #GPSET0]
-	orr r0, r0, #0x01 << DirOut_PIN		@ Set direction to clockwise
+	mov r0, #0x01 << DirOut_PIN		@ Set direction to clockwise
 	str r0, [rGPIO, #GPSET0]
 
 outlet_rotate60_clockwise_loop:
@@ -162,8 +164,7 @@ outlet_rotate60_counterclockwise:
 	moveq r6, #0
 	str r6, [r5]
 
-	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r0, #0x01 << DirOut_PIN		@ Set direction to counterclockwise
+	mov r0, #0x01 << DirOut_PIN		@ Set direction to counterclockwise
 	str r0, [rGPIO, #GPCLR0]
 
 outlet_rotate60_counterclockwise_loop:
@@ -181,18 +182,16 @@ outlet_rotate60_counterclockwise_loop:
 outlet_step:
 	push {lr}
 
-	ldr r0, [rGPIO, #GPSET0]
-	orr r0, r0, #0x01 << StepOut_PIN
+	mov r0, #0x01 << StepOut_PIN
 	str r0, [rGPIO, #GPSET0]
 
-	mov r0, #SLEEP_TIME_US
+	ldr r0, =speed_in_us
 	bl usleep
 
-	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r1, #0x01 << StepOut_PIN
+	mov r0, #0x01 << StepOut_PIN
 	str r0, [rGPIO, #GPCLR0]
 
-	mov r0, #SLEEP_TIME_US
+	ldr r0, =speed_in_us
 	bl usleep
 
 	pop {lr}

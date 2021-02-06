@@ -47,6 +47,7 @@
 @@@ Inputs: None
 @@@ Return: None
 cop_init:
+	push {lr}
 	ldr r0, [rGPIO, #GPFSEL2]
 
 	bic r0, r0, #0b111 << colorBit1_IO_BIT
@@ -57,6 +58,9 @@ cop_init:
 	orr r0, r0, #0b001 << nSLP_IO_BIT
 
 	str r0, [rGPIO, #GPFSEL2]
+
+	bl cop_sleep
+	pop {lr}
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
@@ -64,8 +68,7 @@ cop_init:
 @@@ Inputs: None
 @@@ Return: None
 cop_wakeup:
-	ldr r0, [rGPIO, #GPSET0]
-	orr r0, r0, #0x01 << nSLP_PIN
+	mov r0, #0x01 << nSLP_PIN
 	str r0, [rGPIO, #GPSET0]
 	bx lr
 
@@ -74,8 +77,7 @@ cop_wakeup:
 @@@ Inputs: None
 @@@ Return: None
 cop_sleep:
-	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r0, #0x01 << nSLP_PIN
+	mov r0, #0x01 << nSLP_PIN
 	str r0, [rGPIO, #GPCLR0]
 	bx lr
 

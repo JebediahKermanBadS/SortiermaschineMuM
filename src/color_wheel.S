@@ -65,6 +65,11 @@ color_wheel_init:
 	bic r0, r0, #0b111 << nHallCW_IO_BIT
 	str r0, [rGPIO, #GPFSET2]
 
+	mov r0, #1 << StepCW_PIN
+	orr r0, r0, #1 << DirCW_PIN
+	orr r0, r0, #1 << nRSTCW_PIN
+	str r0, [rGPIO, #GPCLR0]
+
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
@@ -75,8 +80,7 @@ color_wheel_calibrate:
 	push {r4, lr}
 	mov r4, #200
 
-	ldr r0, [rGPIO, #GPSET0]
-	orr r0, r0, #0x01 << DirCW_PIN	 // Set direction to clockwise
+	mov r0, #1 << DirCW_PIN			 // Set direction to clockwise
 	orr r0, r0, #0x01 << nRSTCW_PIN	 // Enable the motor driver
 	str r0, [rGPIO, #GPSET0]
 
@@ -133,15 +137,13 @@ cw_rotate90_loop:
 color_wheel_step:
 	push {lr}
 
-	ldr r0, [rGPIO, #GPSET0]
-	orr r0, r0, #0x01 << StepCW_PIN
+	mov r0, #1 << StepCW_PIN
 	str r0, [rGPIO, #GPSET0]
 
 	ldr r0, speed_in_us
 	bl usleep
 
-	ldr r0, [rGPIO, #GPCLR0]
-	orr r0, r1, #0x01 << StepCW_PIN
+	mov r0, #1 << StepCW_PIN
 	str r0, [rGPIO, #GPCLR0]
 
 	ldr r0, speed_in_us

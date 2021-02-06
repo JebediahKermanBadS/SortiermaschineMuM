@@ -141,12 +141,52 @@ test_feeder: @ Set it on for 2 seconds
 
 	bl color_wheel_rotate90
 
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+
+@test_outlet: @ Calibrate and rotate twice by +90° and once by -90°
+	bl outlet_calibrate
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	bl outlet_rotate60_clockwise
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	bl outlet_rotate60_clockwise
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	bl outlet_rotate60_counterclockwise
+
+test_leds: @ Show all colors in the order: Yellow, Orange, Brown, Blue, Green, Red
+	mov r0, #5
+	bl leds_showColor
+	mov r4, r0
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	mov r0, r4
+	subs r0, r0, #1
+	bpl test_leds
 
 main_munmap_pgpio:
 	mov r0, rGPIO
 	bl unmap_memory
 
 main_end:
+	bl leds_DeInit
+
 	mov sp, fp
 	pop {fp, lr}
 	bx lr
