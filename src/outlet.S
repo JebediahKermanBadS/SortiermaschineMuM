@@ -94,6 +94,11 @@ outlet_calibrate:
 	orr r0, r0, #0x01 << nRSTOut_PIN	@ Enable the motor driver
 	str r0, [rGPIO, #GPSET0]
 
+	ldr r0, [rGPIO, #GPLEV0]
+	ands r0, r0, #0x01 << nHallOutlet_PIN
+	bleq outlet_at_hall
+
+
 outlet_before_hall_loop:
 	bl outlet_step
 
@@ -119,6 +124,24 @@ outlet_after_hall_loop:
 	beq outlet_after_hall_loop
 
 	pop {r4, lr}
+	bx lr
+
+outlet_at_hall:
+	push {lr]
+
+	mov r0, #0x01 << DirOut_PIN @Set direction to counterclockwise
+	str r0, [rGPIO, #GPCLR0]
+loop:
+	bl outlet_step
+
+	ldr r0, [rGPIO, #GPLEV0]
+	ands r0, r0, #0x01 << nHallOutlet_PIN
+	bne loop
+
+	mov r0, #0x01 << DirOut_PIN		@ Set direction to clockwise
+	str r0, [rGPIO, #GPSET0]
+
+	pop {lr}
 	bx lr
 
 @@@ ----------------------------------------------------------------------------------------
