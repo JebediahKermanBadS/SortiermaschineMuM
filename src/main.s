@@ -110,20 +110,32 @@ init_hardware:
 
 main_loop:
 
-	mov r0, rGPIO
+	bl cop_wakeup
+
+test_feeder: @ Set it on for 2 seconds
 	bl feeder_on
 
 	@ Sleep 2 seconds
 	mov r0, #2
 	bl sleep
 
-	mov r0, rGPIO
 	bl feeder_off
 
-	mov r0, rGPIO
+	@ Sleep 2 second
+	mov r0, #2
+	bl sleep
+
+@test_color_wheel: @ Calibrate and rotate twice by 90°
+
 	bl color_wheel_calibrate
 
-	@ Sleep 2 seconds
+	@ Sleep 2 second
+	mov r0, #2
+	bl sleep
+
+	bl color_wheel_rotate90
+
+	@ Sleep 2 second
 	mov r0, #2
 	bl sleep
 
