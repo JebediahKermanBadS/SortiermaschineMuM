@@ -85,7 +85,7 @@ leds_showColor:
 	str r0, [sp, #-4]!
 
 	ldr r1, =color_array
-	ldr r1, [r1, r0]
+	ldr r1, [r1, r0, LSL #2]
 	add r0, r0, #1
 
 	bl WS2812RPi_SetSingle

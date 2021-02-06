@@ -120,76 +120,11 @@ init_hardware:
 	bl outlet_init
 
 main_loop:
+	bl testing_components
 
-	bl cop_wakeup
-
-test_feeder: @ Set it on for 2 seconds
-	bl feeder_on
-
-	@ Sleep 2 seconds
-	mov r0, #2
+	mov r0, #10
 	bl sleep
 
-	bl feeder_off
-
-	@ Sleep 2 second
-	mov r0, #2
-	bl sleep
-
-@test_color_wheel: @ Calibrate and rotate twice by 90°
-
-	bl color_wheel_calibrate
-
-	@ Sleep 2 second
-	mov r0, #2
-	bl sleep
-
-	bl color_wheel_rotate90
-
-	@ Sleep 2 second
-	mov r0, #2
-	bl sleep
-
-	bl color_wheel_rotate90
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-
-@test_outlet: @ Calibrate and rotate twice by +90° and once by -90°
-	bl outlet_calibrate
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-	bl outlet_rotate60_clockwise
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-	bl outlet_rotate60_clockwise
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-	bl outlet_rotate60_counterclockwise
-
-test_leds: @ Show all colors in the order: Yellow, Orange, Brown, Blue, Green, Red
-	mov r0, #5
-	bl leds_showColor
-	mov r4, r0
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-	mov r0, r4
-	subs r0, r0, #1
-	bpl test_leds
 	@@ position outlet
 	ldr r2, =color_array
 	ldr r3, =outlet_position
@@ -232,6 +167,81 @@ main_end:
 
 
 
+
+testing_components:
+	push {lr}
+
+@@@ Testing the co-processor and set it to on
+	bl cop_wakeup
+
+@@@ Setting the feeder to on for 2 seconds
+	bl feeder_on
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	bl feeder_off
+
+	@ Sleep 2 second
+	mov r0, #2
+	bl sleep
+
+@@@ Calibrate and rotate the color wheel 2 times
+	bl color_wheel_calibrate
+
+	@ Sleep 2 second
+	mov r0, #2
+	bl sleep
+
+	bl color_wheel_rotate90
+
+	@ Sleep 2 second
+	mov r0, #2
+	bl sleep
+
+	bl color_wheel_rotate90
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+@q@ Calibrate and rotate the outlet twice by +90° and once by -90°
+	bl outlet_calibrate
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	bl outlet_rotate60_clockwise
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	bl outlet_rotate60_clockwise
+
+	@ Sleep 2 seconds
+	mov r0, #2
+	bl sleep
+
+	bl outlet_rotate60_counterclockwise
+
+@@@ Show all colors in the order: Yellow, Orange, Brown, Blue, Green, Red
+	mov r4, #5
+test_loop:
+	mov r0, r4
+	bl leds_showColor
+
+	@ Sleep 2 seconds
+	mov r0, #1
+	bl sleep
+
+	subs r4, r4, #1
+	bpl test_loop
+
+	pop {lr}
+	bx lr
 
 
 
