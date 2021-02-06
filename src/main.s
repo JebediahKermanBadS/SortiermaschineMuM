@@ -153,7 +153,7 @@ main_loop:
 
 	ldr r1, [r2, +r1]
 
-	@move outlet
+	@rotate outlet
 	cmp r1, #0
 	blt counterclockwise
 	beq no_rotation
