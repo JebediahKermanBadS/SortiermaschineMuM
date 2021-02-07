@@ -140,7 +140,7 @@ main_loop:
 	bl cop_read_color
 
 	cmp r0, #-1
-	beq loop
+	beq main_loop
 
 	@@ position outlet
 	ldr r2, =color_array
@@ -169,7 +169,7 @@ main_loop:
 		adds r1, #1
 		bmi counterclockwise
 	no_rotation:
-		b loop
+		b main_loop
 
 main_munmap_pgpio:
 	mov r0, rGPIO

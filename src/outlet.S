@@ -96,15 +96,27 @@ outlet_calibrate:
 
 	ldr r0, [rGPIO, #GPLEV0]
 	ands r0, r0, #0x01 << nHallOutlet_PIN
-	bleq outlet_at_hall
+	bne outlet_before_hall_loop
 
+outlet_already_at_hall:
+	mov r0, #0x01 << DirOut_PIN @Set direction to counterclockwise
+	str r0, [rGPIO, #GPCLR0]
+outlet_already_at_hall_loop:
+	bl outlet_step
+
+	ldr r0, [rGPIO, #GPLEV0]
+	ands r0, r0, #0x01 << nHallOutlet_PIN
+	beq outlet_already_at_hall_loop
+
+	mov r0, #0x01 << DirOut_PIN		@ Set direction to clockwise
+	str r0, [rGPIO, #GPSET0]
 
 outlet_before_hall_loop:
 	bl outlet_step
 
 	ldr r0, [rGPIO, #GPLEV0]
 	ands r0, r0, #0x01 << nHallOutlet_PIN
-	beq outlet_before_hall_loop
+	bne outlet_before_hall_loop
 
 outlet_at_hall_loop:
 	bl outlet_step
@@ -112,7 +124,7 @@ outlet_at_hall_loop:
 
 	ldr r0, [rGPIO, #GPLEV0]
 	ands r0, r0, #0x01 << nHallOutlet_PIN
-	bne outlet_at_hall_loop
+	beq outlet_at_hall_loop
 
 	mov r0, #0x01 << DirOut_PIN @Set direction to counterclockwise
 	str r0, [rGPIO, #GPCLR0]
@@ -121,27 +133,9 @@ outlet_at_hall_loop:
 outlet_after_hall_loop:
 	bl outlet_step
 	subs r4, r4, #1
-	beq outlet_after_hall_loop
+	bne outlet_after_hall_loop
 
 	pop {r4, lr}
-	bx lr
-
-outlet_at_hall:
-	push {lr]
-
-	mov r0, #0x01 << DirOut_PIN @Set direction to counterclockwise
-	str r0, [rGPIO, #GPCLR0]
-loop:
-	bl outlet_step
-
-	ldr r0, [rGPIO, #GPLEV0]
-	ands r0, r0, #0x01 << nHallOutlet_PIN
-	bne loop
-
-	mov r0, #0x01 << DirOut_PIN		@ Set direction to clockwise
-	str r0, [rGPIO, #GPSET0]
-
-	pop {lr}
 	bx lr
 
 @@@ ----------------------------------------------------------------------------------------
