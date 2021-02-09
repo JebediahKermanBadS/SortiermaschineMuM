@@ -119,11 +119,28 @@ init_hardware:
 	bl leds_Init
 	bl outlet_init
 
-main_loop:
+tests:
 	bl testing_components
 
 	mov r0, #10
 	bl sleep
+
+calibration:
+	bl cop_wakeup
+
+	bl color_wheel_calibrate
+
+	bl outlet_calibrate
+
+	bl feeder_on
+
+main_loop:
+	bl color_wheel_rotate90
+
+	bl cop_read_color
+
+	cmp r0, #-1
+	beq main_loop
 
 	@@ position outlet
 	ldr r2, =color_array
@@ -152,7 +169,7 @@ main_loop:
 		adds r1, #1
 		bmi counterclockwise
 	no_rotation:
-
+		b main_loop
 
 main_munmap_pgpio:
 	mov r0, rGPIO
