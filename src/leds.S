@@ -91,7 +91,6 @@ leds_showColor:
 	bl WS2812RPi_SetSingle
 
 	ldr r0, [sp, #+4]!
-	bl WS2812RPi_SetOthersOff
 	bl WS2812RPi_Show
 
 	pop {lr}

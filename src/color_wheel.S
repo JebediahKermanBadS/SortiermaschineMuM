@@ -18,7 +18,7 @@
 
 @@@ Pins of the Color-Wheel -----------------------------------------------------------------
 	.equ StepCW_PIN,	13
-	.equ DirCW_PIN,		16  @ Pin to set the direction, (0 = counterclockwise, 1 = clockwise)
+	.equ DirCW_PIN,		16  @ Pin to set the direction, (0 = clockwise, 1 = counterclockwise)
 	.equ nRSTCW_PIN,	17  @ 0 = Inactivate, 1 = Active
 	.equ nHallCW_PIN,	20  @ 0 = There is something, 1 = There is nothing
 
@@ -80,36 +80,41 @@ color_wheel_calibrate:
 	push {r4, lr}
 	mov r4, #200
 
-	mov r0, #1 << DirCW_PIN			 // Set direction to clockwise
 	orr r0, r0, #0x01 << nRSTCW_PIN	 // Enable the motor driver
 	str r0, [rGPIO, #GPSET0]
 
-cw_hall_already_active:
-	bl color_wheel_step
-	ldr r0, [rGPIO, #GPLEV0]
-	ands r0, r0, #0x01 << nHallCW_PIN
-	beq cw_hall_already_active
+	mov r0, #1 << DirCW_PIN			 // Set direction to clockwise
+	str r0, [rGPIO, #GPCLR0]
 
-cw_before_hall_loop:
-	bl color_wheel_step
+	@@@ If the hall sensor is already active, rotate until the magnet is outside
+	cw_hall_already_active:
+		bl color_wheel_step
+		ldr r0, [rGPIO, #GPLEV0]
+		ands r0, r0, #0x01 << nHallCW_PIN
+		beq cw_hall_already_active
 
-	ldr r0, [rGPIO, #GPLEV0]
-	ands r0, r0, #0x01 << nHallCW_PIN
-	bne cw_before_hall_loop
+	@@@ Rotate until the wheel is at the beginning of the hall sensor
+	cw_before_hall_loop:
+		bl color_wheel_step
+		ldr r0, [rGPIO, #GPLEV0]
+		ands r0, r0, #0x01 << nHallCW_PIN
+		bne cw_before_hall_loop
 
-cw_at_hall_loop:
-	bl color_wheel_step
-	bl color_wheel_step
-	sub r4, r4, #1
+	@@@ Rotate as long the magnet is in the hall sensor.
+	cw_at_hall_loop:
+		bl color_wheel_step
+		bl color_wheel_step
+		sub r4, r4, #1
 
-	ldr r0, [rGPIO, #GPLEV0]
-	ands r0, r0, #0x01 << nHallCW_PIN
-	beq cw_at_hall_loop
+		ldr r0, [rGPIO, #GPLEV0]
+		ands r0, r0, #0x01 << nHallCW_PIN
+		beq cw_at_hall_loop
 
-cw_after_hall_loop:
-	bl color_wheel_step
-	subs r4, r4, #1
-	bne cw_after_hall_loop
+	@@@ Rotate as long the step-counter is at zero
+	cw_after_hall_loop:
+		bl color_wheel_step
+		subs r4, r4, #1
+		bne cw_after_hall_loop
 
 	pop {r4, lr}
 	bx lr
