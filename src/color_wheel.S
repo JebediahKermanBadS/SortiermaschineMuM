@@ -1,7 +1,7 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/02/04
+@@@	   Date:	2020/02/17
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -9,6 +9,8 @@
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
 @@@ This document deals with the following tasks:
+@@@		- Method to init the color wheel
+@@@		- Method to set the color wheel enable
 @@@		- Method to calibrate the color wheel
 @@@		- Method to roate the color wheel in 90° steps
 @@@ -----------------------------------------------------------------------------------------
@@ -226,10 +228,10 @@ color_wheel_calibrate:
 		subs r1, #2
 		str r1, [r0]
 
-		@ While the counter is not lower than zero repeat this
+		@ While the counter is higher than zero repeat this
 		bpl color_wheel_calibrate_not_finished
 
-		@ The counter is now zero. Reset the direction from the motor to clockwise
+		@ The counter is now zero or lower. Reset the direction from the motor to clockwise
 		mov r0, #1 << DirCW_PIN
 		str r0, [rGPIO, #GPCLR0]
 
