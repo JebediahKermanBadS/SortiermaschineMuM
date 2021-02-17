@@ -14,7 +14,7 @@
 @@@ -----------------------------------------------------------------------------------------
 
 @@@ Constants for the leds ------------------------------------------------------------------
-	.equ BRIGHTNESS, 50
+	.equ BRIGHTNESS, 100
 
 .data
 
@@ -27,8 +27,6 @@ color_array:
  	.word 0x654321 @Brown
  	.word 0xFF8800 @Orange
  	.word 0xFF0000 @Yellow
-
-hex_msg: .asciz "%x\n"
 
 .text
 
