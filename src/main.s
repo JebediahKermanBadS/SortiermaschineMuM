@@ -186,7 +186,7 @@ main_end:
 
 
 testing_components:
-	push {lr}
+	push {r4, lr}
 
 @@@ Testing the co-processor and set it to on
 	bl cop_wakeup
@@ -257,7 +257,7 @@ test_loop:
 	subs r4, r4, #1
 	bpl test_loop
 
-	pop {lr}
+	pop {r4, lr}
 	bx lr
 
 
