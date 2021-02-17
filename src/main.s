@@ -10,6 +10,7 @@
 @@@ -----------------------------------------------------------------------------------------
 
 @@@ Renamimg registers ----------------------------------------------------------------------
+	rTIMER	.req r9
 	rGPIO	.req r10
 
 @@@ Pins of the 7-Segment Display -----------------------------------------------------------
@@ -57,6 +58,8 @@ color_array: .word 0
 outlet_position: .word 0
 
 .text
+
+timer_pre_divider: .word 399
 
 .extern printf
 .extern sleep
@@ -106,25 +109,48 @@ main:
 	cmp rGPIO, #-1
 	beq main_end
 
+	@ Map the virtual address for the timer registers
+	bl mmap_timerIR
+	mov rTIMER, r0
+	cmp rTIMER, #-1
+	beq main_end
+
 	@ Print the virtual address for the gpio reigsters
 	ldr r0, =msg_gpio_mem
 	mov r1, rGPIO
 	bl printf
 
-init_hardware:
+	@ Print the virtual address for the timer reigsters
+	ldr r0, =msg_gpio_mem
+	mov r1, rTIMER
+	bl printf
 
+	@@@ Init all the hardware ---------------------------------------------------------------
 	bl cop_init
 	bl color_wheel_init
 	bl feeder_init
 	bl leds_Init
 	bl outlet_init
+	bl timer_init
 
-tests:
-	bl testing_components
+	mov r0, #1
+	bl colow_wheel_set_enable
 
-	mov r0, #10
-	bl sleep
+	calibrate_loop:
+		ldr r0, [rTIMER, #0x410]
+		cmp r0, #0
+		beq calibrate_loop
 
+		@ Timer counted to zero. 1ms is over
+		str r0, [rTIMER, #0x40C]
+		bl color_wheel_calibrate
+
+		b calibrate_loop
+
+
+	b main_munmap_pgpio
+
+/*
 calibration:
 	bl cop_wakeup
 
@@ -170,8 +196,12 @@ main_loop:
 		bmi counterclockwise
 	no_rotation:
 		b main_loop
+*/
 
 main_munmap_pgpio:
+	mov r0, rTIMER
+	bl unmap_memory
+
 	mov r0, rGPIO
 	bl unmap_memory
 
@@ -182,6 +212,42 @@ main_end:
 	pop {fp, lr}
 	bx lr
 
+
+
+timer_init:
+	push {lr}
+
+	@ Disable the timer interrupt
+	mov r0, #1
+	str r0, [rTIMER, #0x224]
+
+	@ Set the control register of the timer
+	ldr r0, [rTIMER, #0x408]
+	bic r0, #1 << 7 	@ Disable the timer
+	bic r0, #1 << 5 	@ Disable the timer interrupt
+	bic r0, #11 << 2	@ Disable the prescale
+	bic r0, #1 << 1		@ Set to 16-bit timer
+	str r0, [rTIMER, #0x408]
+
+	@ Clear the interrupt pending bit
+	mov r0, #1
+	str r0, [rTIMER, #0x40C]
+
+	@ Set the pre-devider of the timer, fTimer = 1MHz
+	ldr r0, timer_pre_divider
+	str r0, [rTIMER, #0x41C]
+
+	@ Set the load value of the timer to 1000 ; fTimer = 1kHz
+	mov r0, #1000
+	str r0, [rTIMER, #0x400]
+
+	@ Enable the timer after all settings are made
+	ldr r0, [rTIMER, #0x408]
+	orr r0, #1 << 7
+	str r0, [rTIMER, #0x408]
+
+	pop {lr}
+	bx lr
 
 
 

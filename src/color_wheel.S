@@ -37,11 +37,25 @@
 
 	.equ OUTPUT,	0b001
 
-.text
+.data
 
-speed_in_us: .word 2000
+.align 4
+rotation_steps:		.word 400
+timer_event_count: 	.word 1
+calibration_state:	.word case_calibrate_start
+calibrate_steps_in_hall:	.word 0
+
+.text
+@speed_in_ms: 		.word 2
+speed_in_ms: 		.word 40
+
+addr_rotation_steps: 	.word rotation_steps
+addr_timer_event_count: .word timer_event_count
+addr_calibration_state:	.word calibration_state
+addr_calibrate_steps_in_hall: .word calibrate_steps_in_hall
 
 .global color_wheel_init
+.global colow_wheel_set_enable
 .global color_wheel_calibrate
 .global color_wheel_rotate90
 
@@ -73,88 +87,178 @@ color_wheel_init:
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
+@@@ Enable the color wheel
+@@@ Inputs: r0 >= 1 -> enabled
+@@@			r0 == 0 -> disabled
+@@@ Return: None
+colow_wheel_set_enable:
+	cmp r0, #0
+	orr r0, r0, #0x01 << nRSTCW_PIN
+	strne r0, [rGPIO, #GPSET0]		@ Enable the motor driver
+	streq r0, [rGPIO, #GPCLR0]		@ Disable the motor driver
+	bx lr
+
+@@@ -----------------------------------------------------------------------------------------
 @@@ Calibrate the color-wheel with the hall-sensor. Call this in the beggining of the program
 @@@ Inputs: None
 @@@ Return: None
 color_wheel_calibrate:
 	push {r4, lr}
-	mov r4, #400
 
-	orr r0, r0, #0x01 << nRSTCW_PIN	 // Enable the motor driver
-	str r0, [rGPIO, #GPSET0]
+	ldr r0, addr_timer_event_count
+	ldr r1, [r0]
+	subs r1, #1
+	str r1, [r0]
+	bne color_wheel_calibrate_end 	@ If the minimum waiting time is not over: cancel
 
-	mov r0, #1 << DirCW_PIN			 // Set direction to clockwise
-	str r0, [rGPIO, #GPCLR0]
+	@ Reset the timer event count
+	ldr r1, speed_in_ms
+	str r1, [r0]
 
-	@@@ If the hall sensor is already active, rotate until the magnet is outside
-	cw_hall_already_active:
-		bl color_wheel_step
+	ldr r4, addr_calibration_state
+	ldr pc, [r4]
+
+	case_calibrate_start:
 		ldr r0, [rGPIO, #GPLEV0]
-		ands r0, r0, #0x01 << nHallCW_PIN
-		beq cw_hall_already_active
+		ands r0, #1 << nHallCW_PIN	@ Check if the wheel is already at the hall sensor
 
-	@@@ Rotate until the wheel is at the beginning of the hall sensor
-	cw_before_hall_loop:
+		mov r0, #1 << DirCW_PIN
+		str r0, [rGPIO, #GPCLR0]		@ Set the direction to clockwise
+
+		ldreq r0, =case_hall_already_active		@ Hall == 0 : Is active
+		ldrne r0, =case_calibrate_before_hall	@ Hall != 1 : Not active
+		str r0, [r4]	@ Save for the next timer event in the calibration state
+		mov pc, r0
+
+	case_hall_already_active:
 		bl color_wheel_step
+		cmp r0, #0
+		bne color_wheel_calibrate_end
+
+ 		ldr r0, [rGPIO, #GPLEV0]
+		ands r0, #1 << nHallCW_PIN
+
+		@ HallSensor == 0 -> jump to the end
+		beq color_wheel_calibrate_end
+
+		@ Else jump in the next call to the next switch case
+		ldr r0, =case_calibrate_before_hall
+		str r0, [r4]
+		b color_wheel_calibrate_end
+
+	case_calibrate_before_hall:
+		bl color_wheel_step
+		cmp r0, #0
+		bne color_wheel_calibrate_end
+
 		ldr r0, [rGPIO, #GPLEV0]
-		ands r0, r0, #0x01 << nHallCW_PIN
-		bne cw_before_hall_loop
+		ands r0, #1 << nHallCW_PIN
 
-	@@@ Rotate as long the magnet is in the hall sensor.
-	cw_at_hall_loop:
+		@ HallSensor == 1 -> Go to end
+		bne color_wheel_calibrate_end
+
+		@ HallSensor == 0 -> Next case
+		ldr r0, =case_calibrate_at_hall
+		str r0, [r4]
+		b color_wheel_calibrate_end
+
+	case_calibrate_at_hall:
 		bl color_wheel_step
-		bl color_wheel_step
-		sub r4, r4, #1
+		cmp r0, #0
+		bne color_wheel_calibrate_end
+
+		ldr r0, addr_calibrate_steps_in_hall
+		ldr r1, [r0]
+		add r1, #1
+		str r1, [r0]
 
 		ldr r0, [rGPIO, #GPLEV0]
-		ands r0, r0, #0x01 << nHallCW_PIN
-		beq cw_at_hall_loop
+		ands r0, #1 << nHallCW_PIN
 
-	@@@ Rotate as long the step-counter is at zero
-	cw_after_hall_loop:
+		@ HallSensor == 0 -> Go to end
+		beq color_wheel_calibrate_end
+
+		@ HallSensor == 1 -> Next case
+		mov r0, #1 << DirCW_PIN
+		str r0, [rGPIO, #GPSET0]		@ Set the direction to counterclockwise
+
+		ldr r0, =case_calibrate_after_hall
+		str r0, [r4]
+		b color_wheel_calibrate_end
+
+	case_calibrate_after_hall:
 		bl color_wheel_step
-		subs r4, r4, #1
-		bne cw_after_hall_loop
+		cmp r0, #0
+		bne color_wheel_calibrate_end
 
-	pop {r4, lr}
-	bx lr
+		ldr r0, addr_calibrate_steps_in_hall
+		ldr r1, [r0]
+		subs r1, #2
+		str r1, [r0]
+
+		bpl color_wheel_calibrate_end
+
+		mov r0, #1 << DirCW_PIN
+		str r0, [rGPIO, #GPCLR0]		@ Set the direction to clockwise
+
+		ldr r0, =color_wheel_calibrate_end
+		str r0, [r4]
+
+	color_wheel_calibrate_end:
+		pop {r4, lr}
+		bx lr
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Make 400 Steps wiht the color-wheel. This is exactly a rotation of 90 degrees
 @@@ Inputs: None
-@@@ Return: None
+@@@ Return: r0 - The remaining steps
 color_wheel_rotate90:
 	push {r4, lr}
-	mov r4, #400
+	ldr r4, addr_rotation_steps
 
-cw_rotate90_loop:
+	ldr r0, addr_timer_event_count
+	ldr r1, [r0]
+	subs r1, #1
+	str r1, [r0]
+	bne color_wheel_rotate90_end 	@ If the minimum waiting time is not over: cancel
+
+	@ Reset the timer event count
+	ldr r1, speed_in_ms
+	str r1, [r0]
+
 	bl color_wheel_step
-	subs r4, #1
-	bne cw_rotate90_loop
+	cmp r0, #0
+	bgt color_wheel_rotate90_end
 
-	pop {r4, lr}
-	bx lr
+	ldr r0, [r4]
+	subs r0, #1
+	str r0, [r4]
+
+	bgt color_wheel_rotate90_end
+
+	color_wheel_rotate90_reset:
+		mov r0, #400
+		str r0, [r4]
+
+	color_wheel_rotate90_end:
+
+		ldr r0, [r4]
+		pop {r4, lr}
+		bx lr
+
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Make a step with the color wheel
 @@@ Inputs: None
-@@@ Return: None
+@@@ Return: r0 == 0: Set to LOW, r0 > 0: Set to HIGH
 color_wheel_step:
-	push {lr}
-
+	ldr r0, [rGPIO, #GPLEV0]
+	ands r0, #1 << StepCW_PIN
 	mov r0, #1 << StepCW_PIN
-	str r0, [rGPIO, #GPSET0]
+	streq r0, [rGPIO, #GPSET0]
+	strne r0, [rGPIO, #GPCLR0]
+	movne r0, #0
 
-	ldr r0, speed_in_us
-	bl usleep
-
-	mov r0, #1 << StepCW_PIN
-	str r0, [rGPIO, #GPCLR0]
-
-	ldr r0, speed_in_us
-	bl usleep
-
-	pop {lr}
 	bx lr
 
 
