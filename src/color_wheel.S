@@ -78,7 +78,7 @@ color_wheel_init:
 @@@ Return: None
 color_wheel_calibrate:
 	push {r4, lr}
-	mov r4, #200
+	mov r4, #400
 
 	orr r0, r0, #0x01 << nRSTCW_PIN	 // Enable the motor driver
 	str r0, [rGPIO, #GPSET0]
