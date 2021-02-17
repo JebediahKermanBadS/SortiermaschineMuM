@@ -21,12 +21,12 @@
 @@@ Define the colors for the leds as array with the size 6
 .align 4
 color_array:
-	.word 0xFF0000 @Red
  	.word 0x00FF00 @Green
+	.word 0xFF0000 @Red
  	.word 0x0000FF @Blue
+ 	.word 0xFFFF00 @Yellow
  	.word 0x654321 @Brown
  	.word 0xFF8800 @Orange
- 	.word 0xFF0000 @Yellow
 
 .text
 
