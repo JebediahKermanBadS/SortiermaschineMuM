@@ -39,7 +39,7 @@
 
 .text
 
-speed_in_us: .word 20000
+speed_in_us: .word 2000
 
 .global color_wheel_init
 .global color_wheel_calibrate

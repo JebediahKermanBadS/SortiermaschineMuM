@@ -39,7 +39,7 @@
 
 .data
 
-speed_in_us: .word 20000
+speed_in_us: .word 2000
 
 @ offset_flag counts how many times the outlet is rotated in one direction to counter the
 @ resulting step offset
