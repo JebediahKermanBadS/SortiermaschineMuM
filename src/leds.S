@@ -1,7 +1,7 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/02/04
+@@@	   Date:	2021/02/20
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -71,6 +71,7 @@ leds_DeInit:
 	bl WS2812RPi_DeInit
 
 	pop {lr}
+	bx lr
 
 
 @@@ -----------------------------------------------------------------------------------------
@@ -84,12 +85,26 @@ leds_showColor:
 	ldr r1, [r1, r0, LSL #2]
 	add r0, r0, #1
 
-	bl WS2812RPi_SetSingle
+	bl WS2812RPi_AllOff
+	bl WS2812RPi_Show
 
+	bl WS2812RPi_SetSingle
 	bl WS2812RPi_Show
 
 	pop {lr}
 	bx lr
 
 
+@@@ -----------------------------------------------------------------------------------------
+@@@ This method sets all leds to off
+@@@ Inputs: None
+@@@ Return: None
+leds_allOff:
+	push {lr}
+
+	bl WS2812RPi_AllOff
+	bl WS2812RPi_Show
+
+	pop {lr}
+	bx lr
 

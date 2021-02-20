@@ -1,7 +1,7 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/26/01
+@@@	   Date:	2021/02/20
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -21,11 +21,6 @@
 	.equ pin_SEG_A,		6
 	.equ pin_SEG_B,		7
 
-@@@ Pins of the Buttons ---------------------------------------------------------------------
-	.equ pin_nBTN1,		8
-	.equ pin_nBTN2,		9
-	.equ pin_nBTN3,		10
-
 @@@ Pins for the objectsensor in the outlet -------------------------------------------------
 	.equ pin_objCW,		25
 	.equ pin_dirOut,	26
@@ -37,12 +32,9 @@
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
 
-@@@ For the buttons -------------------------------------------------------------------------
+
+	.equ pin_nBTN1,		8
 	.equ GPEDS0,	0x40
-	.equ GPREN0,	0x4C
-	.equ GPFEN0,	0x58
-	.equ GPHEN0,	0x64
-	.equ GPLEN0,	0x70
 
 
 .data
@@ -57,6 +49,9 @@ msg_print_int: 	.asciz "%d\n"
 msg_print_hex: 	.asciz "%x\n"
 
 msg_calibration_finished: .asciz "The calibration of the outlet and the color wheel is finished.\n"
+
+.align 4
+cop_reading_time: .word 1000
 
 .align 4
 is_running:	.word 0
@@ -74,7 +69,8 @@ outlet_position: .word 0
 
 .text
 
-timer_pre_divider: 	.word 399
+cop_reading_time_reset: .word 1000
+addr_cop_reading_time: .word cop_reading_time
 
 addr_is_running: 	.word is_running
 
@@ -149,8 +145,99 @@ main:
 	bl leds_Init
 	bl outlet_init
 	bl timer_init
-	bl interrupts_disable
 	bl buttons_init
+
+	bl calibrate
+
+	ldr r0, =msg_calibration_finished
+	bl printf
+
+	ldr r4, =case_rotate_color_wheel
+	mov r5, #-1 						@ r5: readed color
+	main_loop:
+		ldr r0, [rTIMER, #0x410]
+		cmp r0, #0
+		beq check_btn
+
+		@ Else:
+		str r0, [rTIMER, #0x40C]
+		mov pc, r4
+		case_rotate_color_wheel:
+			bl color_wheel_rotate90
+			cmp r0, #0
+			ldreq r4, =case_read_color
+
+			b case_end
+
+		case_read_color:
+			ldr r0, addr_cop_reading_time
+			ldr r1, [r0]
+			subs r1, #1
+			str r1, [r0]
+			bne case_end
+
+			ldr r1, cop_reading_time_reset
+			str r1, [r0]
+
+			bl color_wheel_reset_rotation
+
+			bl cop_read_color
+			mov r5, r0
+
+			ldr r4, =case_rotate_outlet
+
+			@ If the color is not recognized set it to brown
+			cmp r5, #-1
+			moveq r5, #3
+
+			bl leds_showColor
+
+			b case_end
+
+		case_rotate_outlet:
+			ldr r4, =case_rotate_color_wheel
+			b case_end
+
+
+
+		case_end:
+
+
+		check_btn:
+			ldr r0, [rGPIO, #GPEDS0]
+			ands r0, #1 << pin_nBTN1
+			beq main_loop
+
+			str r0, [rGPIO, #GPEDS0]
+
+			ldr r0, addr_is_running
+			ldr r0, [r0]
+			cmp r0, #0
+			str r0, [sp, #-4]!
+			bleq machine_start
+			ldr r0, [sp], #4
+			cmp r0, #1
+			bleq machine_stop
+
+		b main_loop
+
+main_munmap_pgpio:
+	mov r0, rTIMER
+	bl unmap_memory
+
+	mov r0, rGPIO
+	bl unmap_memory
+
+main_end:
+	bl leds_DeInit
+
+	mov sp, fp
+	pop {fp, lr}
+	bx lr
+
+
+calibrate:
+	push {lr}
 
 	mov r0, #1
 	bl colow_wheel_set_enable
@@ -174,42 +261,7 @@ main:
 	bl timer_set_enable
 	bl cop_sleep
 
-	ldr r0, =msg_calibration_finished
-	bl printf
-
-	main_loop:
-		ldr r0, [rGPIO, #GPEDS0]
-		ands r0, #1 << pin_nBTN1
-		beq main_loop
-
-		str r0, [rGPIO, #GPEDS0]
-
-		ldr r0, addr_is_running
-		ldr r0, [r0]
-		cmp r0, #0
-		str r0, [sp, #-4]!
-		bleq machine_start
-		ldr r0, [sp], #4
-		cmp r0, #1
-		bleq machine_stop
-
-		b main_loop
-
-	b main_munmap_pgpio
-
-
-main_munmap_pgpio:
-	mov r0, rTIMER
-	bl unmap_memory
-
-	mov r0, rGPIO
-	bl unmap_memory
-
-main_end:
-	bl leds_DeInit
-
-	mov sp, fp
-	pop {fp, lr}
+	pop {lr}
 	bx lr
 
 machine_start:
@@ -244,125 +296,6 @@ machine_stop:
 
 	pop {lr}
 	bx lr
-
-swap_led_state:
-	ldr r0, [rGPIO, #GPLVL0]
-	ands r0, #1 << 19
-	mov r0, #1 << 19
-	streq r0, [rGPIO, #GPSET0]
-	strne r0, [rGPIO, #GPCLR0]
-	bx lr
-
-@@@ -----------------------------------------------------------------------------------------
-@@@ Enable the buttons
-@@@ Inputs: None
-@@@ Return: None
-buttons_init:
-	ldr r0, [rGPIO, #GPFSET0]
-
-	@ Set the button at pin 8 as input
-	bic r0, #0b111 << 24
-
-	@ Set the button at pin 9 as input
-	bic r0, #0b111 << 27
-
-	str r0, [rGPIO, #GPFSET0]
-
-	@ Set the button at pin 10 as input
-	ldr r0, [rGPIO, #GPFSET1]
-	bic r0, #0b111
-	str r0, [rGPIO, #GPFSET1]
-
-	@ Enable RISING EDGE detect for all buttons
-	ldr r0, [rGPIO, #GPREN0]
-	orr r0, #0b111 << pin_nBTN1
-	str r0, [rGPIO, #GPREN0]
-
-	@ Disable FALLING EDGE detect for all buttons
-	ldr r0, [rGPIO, #GPFEN0]
-	bic r0, #0b111 << pin_nBTN1
-	str r0, [rGPIO, #GPFEN0]
-
-	@ Disable HIGH detect for all buttons
-	ldr r0, [rGPIO, #GPHEN0]
-	bic r0, #0b111 << pin_nBTN1
-	str r0, [rGPIO, #GPHEN0]
-
-	@ Disable LOW detect for all buttons
-	ldr r0, [rGPIO, #GPLEN0]
-	bic r0, #0b111 << pin_nBTN1
-	str r0, [rGPIO, #GPLEN0]
-	bx lr
-
-@@@ -----------------------------------------------------------------------------------------
-@@@ Disable interrupts
-@@@ Inputs: None
-@@@ Return: None
-interrupts_disable:
-	@ Disable timer interrupt
-	mov r0, #1
-	str r0, [rTIMER, #0x224]
-
-	@ Disable gpio interrupts
-	mov r0, #0b1111 << 17
-	str r0, [rTIMER, #0x220]
-
-	bx lr
-
-@@@ -----------------------------------------------------------------------------------------
-@@@ Initialize the timer
-@@@ Inputs: None
-@@@ Return: None
-timer_init:
-
-	@ Set the control register of the timer
-	ldr r0, [rTIMER, #0x408]
-	bic r0, #1 << 7 	@ Disable the timer
-	bic r0, #1 << 5 	@ Disable the timer interrupt
-	bic r0, #11 << 2	@ Disable the prescale
-	bic r0, #1 << 1		@ Set to 16-bit timer
-	str r0, [rTIMER, #0x408]
-
-	@ Clear the interrupt pending bit
-	mov r0, #1
-	str r0, [rTIMER, #0x40C]
-
-	@ Set the pre-devider of the timer, fTimer = 1MHz
-	ldr r0, timer_pre_divider
-	str r0, [rTIMER, #0x41C]
-
-	@ Set the load value of the timer to 1000 ; fTimer = 1kHz
-	mov r0, #1000
-	str r0, [rTIMER, #0x400]
-
-	@ Enable the timer after all settings are made
-	ldr r0, [rTIMER, #0x408]
-	orr r0, #1 << 7
-	str r0, [rTIMER, #0x408]
-
-	bx lr
-
-@@@ -----------------------------------------------------------------------------------------
-@@@ Enable or disable the timer
-@@@ Inputs: r0 >= 1 -> enabled
-@@@			r0 == 0 -> disabled
-@@@ Return: None
-timer_set_enable:
-	cmp r0, #0
-
-	@ Set the control register of the timer
-	ldr r0, [rTIMER, #0x408]
-	biceq r0, #1 << 7 	@ Disable the timer
-	orrne r0, #1 << 7 	@ Enable the timer
-	str r0, [rTIMER, #0x408]
-
-	bx lr
-
-
-
-
-
-
 
 
 /*

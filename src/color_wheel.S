@@ -60,6 +60,7 @@ addr_calibrate_steps_in_hall: .word calibrate_steps_in_hall
 .global colow_wheel_set_enable
 .global color_wheel_calibrate
 .global color_wheel_rotate90
+.global color_wheel_reset_rotation
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Initialize the pins for the color wheel as input/output
@@ -272,6 +273,11 @@ color_wheel_rotate90:
 	ldr r1, speed_in_ms
 	str r1, [r0]
 
+	@ If the color wheel already did the 400 steps: Do nothing
+	ldr r0, [r4]
+	cmp r0, #0
+	beq color_wheel_rotate90_end
+
 	@ Do step and check if the step is finished (state of the wheel pin have to be LOW)
 	bl color_wheel_step
 	cmp r0, #0
@@ -283,18 +289,25 @@ color_wheel_rotate90:
 	str r0, [r4]
 
 	@ If there are still steps left, jump straight to the end
-	bgt color_wheel_rotate90_end
+	@bgt color_wheel_rotate90_end
 
 	@ If not reset the counter
-	color_wheel_rotate90_reset:
-		mov r0, #400
-		str r0, [r4]
+	@	color_wheel_rotate90_reset:
+	@	mov r0, #400
+	@	str r0, [r4]
 
 	color_wheel_rotate90_end:
 
 		ldr r0, [r4]
 		pop {r4, lr}
 		bx lr
+
+color_wheel_reset_rotation:
+	ldr r0, addr_rotation_steps
+	mov r1, #400
+	str r1, [r0]
+
+	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Make a step with the color wheel
