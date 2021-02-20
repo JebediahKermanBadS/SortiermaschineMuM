@@ -242,6 +242,8 @@ calibrate:
 	mov r0, #1
 	bl colow_wheel_set_enable
 	mov r0, #1
+	bl outlet_set_enable
+	mov r0, #1
 	bl timer_set_enable
 	bl cop_wakeup
 	calibrate_loop:
