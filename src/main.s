@@ -1,7 +1,7 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/26/01
+@@@	   Date:	2021/02/20
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -10,6 +10,7 @@
 @@@ -----------------------------------------------------------------------------------------
 
 @@@ Renamimg registers ----------------------------------------------------------------------
+	rTIMER	.req r9
 	rGPIO	.req r10
 
 @@@ Pins of the 7-Segment Display -----------------------------------------------------------
@@ -20,19 +21,21 @@
 	.equ pin_SEG_A,		6
 	.equ pin_SEG_B,		7
 
-@@@ Pins of the Buttons ---------------------------------------------------------------------
-	.equ pin_nBTN1,		8
-	.equ pin_nBTN2,		9
-	.equ pin_nBTN3,		10
-
 @@@ Pins for the objectsensor in the outlet -------------------------------------------------
 	.equ pin_objCW,		25
 	.equ pin_dirOut,	26
 
 @@@ Define the offset for the GPIO Registers ------------------------------------------------
+	.equ GPFSET0, 	0x00
+	.equ GPFSET1, 	0x04
 	.equ GPSET0,	0x1C
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
+
+
+	.equ pin_nBTN1,		8
+	.equ GPEDS0,	0x40
+
 
 .data
 .align 4
@@ -44,6 +47,14 @@ msg_timer_mem: 	.asciz "Timer memory is: %p\n"
 
 msg_print_int: 	.asciz "%d\n"
 msg_print_hex: 	.asciz "%x\n"
+
+msg_calibration_finished: .asciz "The calibration of the outlet and the color wheel is finished.\n"
+
+.align 4
+cop_reading_time: .word 1000
+
+.align 4
+is_running:	.word 0
 
 .align 4
 color_array: .word 0
@@ -57,6 +68,11 @@ color_array: .word 0
 outlet_position: .word 0
 
 .text
+
+cop_reading_time_reset: .word 1000
+addr_cop_reading_time: .word cop_reading_time
+
+addr_is_running: 	.word is_running
 
 .extern printf
 .extern sleep
@@ -106,25 +122,225 @@ main:
 	cmp rGPIO, #-1
 	beq main_end
 
+	@ Map the virtual address for the timer registers
+	bl mmap_timerIR
+	mov rTIMER, r0
+	cmp rTIMER, #-1
+	beq main_end
+
 	@ Print the virtual address for the gpio reigsters
 	ldr r0, =msg_gpio_mem
 	mov r1, rGPIO
 	bl printf
 
-init_hardware:
+	@ Print the virtual address for the timer reigsters
+	ldr r0, =msg_gpio_mem
+	mov r1, rTIMER
+	bl printf
 
+	@@@ Init all the hardware ---------------------------------------------------------------
 	bl cop_init
 	bl color_wheel_init
 	bl feeder_init
 	bl leds_Init
 	bl outlet_init
+	bl timer_init
+	bl buttons_init
 
-tests:
-	bl testing_components
+	bl calibrate
 
-	mov r0, #10
-	bl sleep
+	ldr r0, =msg_calibration_finished
+	bl printf
 
+	ldr r4, =case_rotate_color_wheel
+	mov r5, #-1 						@ r5: readed color
+	main_loop:
+		ldr r0, [rTIMER, #0x410]
+		cmp r0, #0
+		beq check_btn
+
+		@ Else:
+		str r0, [rTIMER, #0x40C]
+		mov pc, r4
+		case_rotate_color_wheel:
+			bl color_wheel_rotate90
+			cmp r0, #0
+			ldreq r4, =case_read_color
+
+			b case_end
+
+		case_read_color:
+			ldr r0, addr_cop_reading_time
+			ldr r1, [r0]
+			subs r1, #1
+			str r1, [r0]
+			bne case_end
+
+			ldr r1, cop_reading_time_reset
+			str r1, [r0]
+
+			bl color_wheel_reset_rotation
+
+			bl cop_read_color
+
+			@ If the color is not recognized set it to brown
+			cmp r0, #-1
+			moveq r0, #3
+			mov r5, r0
+
+			bl leds_showColor
+
+			@@ position outlet
+			ldr r0, =color_array
+			ldr r2, =outlet_position
+			ldr r1, [r2]
+
+			@ calculate offset
+			subs r1, r5, r1
+			addmi r1, r1, #6
+			str r1, [r2]
+
+			ldr r1, [r0, r1, LSL #2]
+			cmp r1, #0
+			ldreq r4, =case_rotate_color_wheel  @ r1 == 0
+			ldrlt r4, =case_rotate_outlet_cclockwise		@ r1 < 0
+			ldrgt r4, =case_rotate_outlet_clockwise
+
+			mov r0, r1
+			str r0, [sp, #-4]!
+			blgt outlet_rotate_clockwise_initiate
+
+			ldr r0, [sp], #4
+			cmp r0, #0
+			bllt outlet_rotate_counterclockwise_initiate
+
+			b case_end
+
+		case_rotate_outlet_clockwise:
+			bl outlet_rotate60_counterclockwise
+			cmp r0, #0
+			ldreq r4, =case_rotate_color_wheel
+
+			b case_end
+
+		case_rotate_outlet_cclockwise:
+			bl outlet_rotate60_counterclockwise
+			cmp r0, #0
+			ldreq r4, =case_rotate_color_wheel
+
+			b case_end
+
+		case_end:
+
+
+		check_btn:
+			ldr r0, [rGPIO, #GPEDS0]
+			ands r0, #1 << pin_nBTN1
+			beq main_loop
+
+			str r0, [rGPIO, #GPEDS0]
+
+			ldr r0, addr_is_running
+			ldr r0, [r0]
+			cmp r0, #0
+			str r0, [sp, #-4]!
+			bleq machine_start
+			ldr r0, [sp], #4
+			cmp r0, #1
+			bleq machine_stop
+
+		b main_loop
+
+main_munmap_pgpio:
+	mov r0, rTIMER
+	bl unmap_memory
+
+	mov r0, rGPIO
+	bl unmap_memory
+
+main_end:
+	bl leds_DeInit
+
+	mov sp, fp
+	pop {fp, lr}
+	bx lr
+
+
+calibrate:
+	push {r4, lr}
+
+	mov r0, #1
+	bl colow_wheel_set_enable
+	mov r0, #1
+	bl outlet_set_enable
+	mov r0, #1
+	bl timer_set_enable
+	bl cop_wakeup
+	calibrate_loop:
+		ldr r0, [rTIMER, #0x410]
+		cmp r0, #0
+		beq calibrate_loop
+
+		@ Timer counted to zero. 1ms is over
+		str r0, [rTIMER, #0x40C]
+		bl color_wheel_calibrate
+		mov r4, r0
+
+		bl outlet_calibrate
+		cmp r0, #0
+		bgt calibrate_loop
+		cmp r4, #0
+		bgt calibrate_loop
+
+	bl colow_wheel_set_enable
+	mov r0, #0
+	bl outlet_set_enable
+	mov r0, #0
+	bl timer_set_enable
+	bl cop_sleep
+
+	pop {r4, lr}
+	bx lr
+
+machine_start:
+	push {lr}
+
+	bl feeder_on
+	bl cop_wakeup
+	mov r0, #1
+	bl colow_wheel_set_enable
+	mov r0, #1
+	bl outlet_set_enable
+	mov r0, #1
+	bl timer_set_enable
+
+	mov r1, #1
+	ldr r0, addr_is_running
+	str r1, [r0]
+
+	pop {lr}
+	bx lr
+
+machine_stop:
+	push {lr}
+	bl feeder_off
+	bl cop_sleep
+	mov r0, #0
+	bl colow_wheel_set_enable
+	mov r0, #0
+	bl outlet_set_enable
+	mov r0, #0
+	bl timer_set_enable
+
+	mov r1, #0
+	ldr r0, addr_is_running
+	str r1, [r0]
+
+	pop {lr}
+	bx lr
+
+
+/*
 calibration:
 	bl cop_wakeup
 
@@ -170,105 +386,7 @@ main_loop:
 		bmi counterclockwise
 	no_rotation:
 		b main_loop
-
-main_munmap_pgpio:
-	mov r0, rGPIO
-	bl unmap_memory
-
-main_end:
-	bl leds_DeInit
-
-	mov sp, fp
-	pop {fp, lr}
-	bx lr
-
-
-
-
-testing_components:
-	push {r4, lr}
-
-@@@ Testing the co-processor and set it to on
-	bl cop_wakeup
-
-@@@ Setting the feeder to on for 2 seconds
-	bl feeder_on
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-	bl feeder_off
-
-	@ Sleep 2 second
-	mov r0, #2
-	bl sleep
-
-@@@ Calibrate and rotate the color wheel 2 times
-	bl color_wheel_calibrate
-
-	@ Sleep 2 second
-	mov r0, #2
-	bl sleep
-
-	bl color_wheel_rotate90
-
-	@ Sleep 2 second
-	mov r0, #2
-	bl sleep
-
-	bl color_wheel_rotate90
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-@q@ Calibrate and rotate the outlet twice by +90° and once by -90°
-	bl outlet_calibrate
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-	bl outlet_rotate60_clockwise
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-	bl outlet_rotate60_clockwise
-
-	@ Sleep 2 seconds
-	mov r0, #2
-	bl sleep
-
-	bl outlet_rotate60_counterclockwise
-
-@@@ Show all colors in the order: Yellow, Orange, Brown, Blue, Green, Red
-	mov r4, #5
-test_loop:
-	mov r0, r4
-	bl leds_showColor
-
-	@ Sleep 2 seconds
-	mov r0, #1
-	bl sleep
-
-	subs r4, r4, #1
-	bpl test_loop
-
-	pop {r4, lr}
-	bx lr
-
-
-
-
-
-
-
-
-
-
+*/
 
 
 
