@@ -182,23 +182,53 @@ main:
 			bl color_wheel_reset_rotation
 
 			bl cop_read_color
-			mov r5, r0
-
-			ldr r4, =case_rotate_outlet
 
 			@ If the color is not recognized set it to brown
-			cmp r5, #-1
-			moveq r5, #3
+			cmp r0, #-1
+			moveq r0, #3
+			mov r5, r0
 
 			bl leds_showColor
 
+			@@ position outlet
+			ldr r0, =color_array
+			ldr r2, =outlet_position
+			ldr r1, [r2]
+
+			@ calculate offset
+			subs r1, r5, r1
+			addmi r1, r1, #6
+			str r1, [r2]
+
+			ldr r1, [r0, r1, LSL #2]
+			cmp r1, #0
+			ldreq r4, =case_rotate_color_wheel  @ r1 == 0
+			ldrlt r4, =case_rotate_outlet_cclockwise		@ r1 < 0
+			ldrgt r4, =case_rotate_outlet_clockwise
+
+			mov r0, r1
+			str r0, [sp, #-4]!
+			blgt outlet_rotate_clockwise_initiate
+
+			ldr r0, [sp], #4
+			cmp r0, #0
+			bllt outlet_rotate_counterclockwise_initiate
+
 			b case_end
 
-		case_rotate_outlet:
-			ldr r4, =case_rotate_color_wheel
+		case_rotate_outlet_clockwise:
+			bl outlet_rotate60_counterclockwise
+			cmp r0, #0
+			ldreq r4, =case_rotate_color_wheel
+
 			b case_end
 
+		case_rotate_outlet_cclockwise:
+			bl outlet_rotate60_counterclockwise
+			cmp r0, #0
+			ldreq r4, =case_rotate_color_wheel
 
+			b case_end
 
 		case_end:
 
@@ -237,7 +267,7 @@ main_end:
 
 
 calibrate:
-	push {lr}
+	push {r4, lr}
 
 	mov r0, #1
 	bl colow_wheel_set_enable
@@ -254,16 +284,22 @@ calibrate:
 		@ Timer counted to zero. 1ms is over
 		str r0, [rTIMER, #0x40C]
 		bl color_wheel_calibrate
+		mov r4, r0
 
+		bl outlet_calibrate
 		cmp r0, #0
+		bgt calibrate_loop
+		cmp r4, #0
 		bgt calibrate_loop
 
 	bl colow_wheel_set_enable
 	mov r0, #0
+	bl outlet_set_enable
+	mov r0, #0
 	bl timer_set_enable
 	bl cop_sleep
 
-	pop {lr}
+	pop {r4, lr}
 	bx lr
 
 machine_start:
@@ -273,6 +309,8 @@ machine_start:
 	bl cop_wakeup
 	mov r0, #1
 	bl colow_wheel_set_enable
+	mov r0, #1
+	bl outlet_set_enable
 	mov r0, #1
 	bl timer_set_enable
 
@@ -289,6 +327,8 @@ machine_stop:
 	bl cop_sleep
 	mov r0, #0
 	bl colow_wheel_set_enable
+	mov r0, #0
+	bl outlet_set_enable
 	mov r0, #0
 	bl timer_set_enable
 

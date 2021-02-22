@@ -134,6 +134,7 @@ color_wheel_calibrate:
 
 	@ Load the current case of the calibration.
 	@ ! DO NOT CHANGE THE REGISTER r4 IN THIS METHOD !
+	mov r0, #0
 	ldr r4, addr_calibration_state
 	ldr pc, [r4]
 

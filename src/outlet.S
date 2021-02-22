@@ -45,7 +45,7 @@
 offset_flag:	.word 0
 rotation_steps: 	.word 67
 timer_event_count:	.word 1
-calibration_state:	.word case_calibration_start
+calibration_state:	.word case_calibrate_start
 calibrate_steps_in_hall:	.word 0
 
 .text
@@ -135,41 +135,42 @@ outlet_calibrate:
 
 	@ Load the current case of the calibration.
 	@ ! DO NOT CHANGE THE REGISTER r4 IN THIS METHOD !
+	mov r0, #0
 	ldr r4, addr_calibration_state
 	ldr pc, [r4]
 
-case_calibrate_start:
-	@ Check if the outlet is already at the hall sensor
-	ldr r0, [rGPIO, #GPLEV0]
-	ands r0, #1 << nHallOutlet_PIN
+	case_calibrate_start:
+		@ Check if the outlet is already at the hall sensor
+		ldr r0, [rGPIO, #GPLEV0]
+		ands r0, #1 << nHallOutlet_PIN
 
-	ldreq r0, =case_hall_already_active		@ Hall == 0 : Is active
-	ldrne r0, =case_calibrate_before_hall	@ Hall != 1 : Not active
-	str r0, [r4]		@ Save the next case address in 'calibration_state'
-	mov pc, r0
+		ldreq r0, =case_hall_already_active		@ Hall == 0 : Is active
+		ldrne r0, =case_calibrate_before_hall	@ Hall != 1 : Not active
+		str r0, [r4]		@ Save the next case address in 'calibration_state'
+		mov pc, r0
 
-case_hall_already_active:
-	bl outlet_step
-	@ Check if the step is finished
-	cmp r0, #0
-	bne outlet_calibrate_not_finished
+	case_hall_already_active:
+		bl outlet_step
+		@ Check if the step is finished
+		cmp r0, #0
+		bne outlet_calibrate_not_finished
 
-	@ Read the level of the hall sensor and cmp with #0
-	ldr r0, [rGPIO, #GPLEV0]
-	ands r0, #1 << nHallOutlet_PIN
+		@ Read the level of the hall sensor and cmp with #0
+		ldr r0, [rGPIO, #GPLEV0]
+		ands r0, #1 << nHallOutlet_PIN
 
-	@ HallSensor == 0 -> jump to the end
-	beq outlet_calibrate_not_finished
+		@ HallSensor == 0 -> jump to the end
+		beq outlet_calibrate_not_finished
 
-	@ Else save the address for the next case and jump to the end
-	ldr r0, =case_calibrate_before_hall
-	str r0, [r4]
-	b outlet_calibrate_not_finished
+		@ Else save the address for the next case and jump to the end
+		ldr r0, =case_calibrate_before_hall
+		str r0, [r4]
+		b outlet_calibrate_not_finished
 
-case_calibrate_before_hall_loop:
-	bl outlet_step
+	case_calibrate_before_hall:
+		bl outlet_step
 
-	@ Check if the step is finished
+		@ Check if the step is finished
 		cmp r0, #0
 		bne outlet_calibrate_not_finished
 
@@ -185,7 +186,7 @@ case_calibrate_before_hall_loop:
 		str r0, [r4]
 		b outlet_calibrate_not_finished
 
-case_calibrate_at_hall:
+	case_calibrate_at_hall:
 		bl outlet_step
 
 		@ Check if the step is finished
@@ -214,7 +215,7 @@ case_calibrate_at_hall:
 		str r0, [r4]
 		b outlet_calibrate_not_finished
 
-case_calibrate_after_hall:
+	case_calibrate_after_hall:
 		bl outlet_step
 
 		@ Check if the step is finished
@@ -253,18 +254,23 @@ case_calibrate_after_hall:
 
 @@@ ----------------------------------------------------------------------------------------
 @@@ Rotate the Outlet in 60 degree Steps clockwise
-@@@ Inputs: None
+@@@ Inputs: r0 - Step count
 @@@ Return: None
 outlet_rotate_clockwise_initiate:
 	push {r4, r5, r6, lr}
-	mov r4, #67
+	mov r1, #67
+	mul r1, r0, r1
+
+	ldr r4, addr_rotation_steps
+	str r1, [r4]
+
 	ldr r5, =offset_flag
 	ldr r6, [r5]
-	add r6, #1
+	add r6, r0
 
 	cmp r6, #3
-	subeq r4, #1
-	moveq r6, #0
+	subge r4, #1
+	subge r6, #3
 	str r6, [r5]
 
 	mov r0, #0x01 << DirOut_PIN		@ Set direction to clockwise
@@ -316,14 +322,19 @@ outlet_rotate60_clockwise:
 @@@ Return: None
 outlet_rotate_counterclockwise_initiate:
 	push {r4, r5, r6, lr}
-	mov r4, #67
+	mov r1, #-67
+	mul r1, r1, r0
+
+	ldr r4, addr_rotation_steps
+	str r1, [r4]
+
 	ldr r5, =offset_flag
 	ldr r6, [r5]
-	sub r6, #1
+	add r6, r0
 
 	cmp r6, #-3
-	subeq r4, #1
-	moveq r6, #0
+	addle r4, #1
+	addle r6, #3
 	str r6, [r5]
 
 	mov r0, #0x01 << DirOut_PIN		@ Set direction to counterclockwise
