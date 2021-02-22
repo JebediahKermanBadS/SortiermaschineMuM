@@ -323,7 +323,7 @@ outlet_rotate60_clockwise:
 outlet_rotate_counterclockwise_initiate:
 	push {r4, r5, r6, lr}
 	mov r1, #-67
-	mul r1, r1, r0
+	mul r1, r0
 
 	ldr r4, addr_rotation_steps
 	str r1, [r4]
