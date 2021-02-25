@@ -41,21 +41,19 @@
 .align 4
 
 msg_init: .asciz "M&M Sorting Machine started!\nThis is a program from the following group:\n\t- Demiroez, Dilara\n\t- Gonther, Levin\n\t- Grajczak, Benjamin\n\t- Pfister, Marc\n"
-
 msg_gpio_mem: 	.asciz "Gpio memory is: %p\n"
 msg_timer_mem: 	.asciz "Timer memory is: %p\n"
-
-msg_print_int: 	.asciz "%d\n"
-msg_print_hex: 	.asciz "%x\n"
-
 msg_calibration_finished: .asciz "The calibration of the outlet and the color wheel is finished.\n"
 
+@ This is the waiting remaining time for the co-processor to read a color (in ms). Reset value is defined in cop_reading_time_reset
 .align 4
 cop_reading_time: .word 1000
 
+@ If the machine is running this is 1
 .align 4
 is_running:	.word 0
 
+@ Used in the calculation of the outlet position
 .align 4
 color_array: .word 0
 			 .word 1
@@ -64,18 +62,23 @@ color_array: .word 0
 			 .word -2
 			 .word -1
 
+@ The current outlet position
 .align 4
 outlet_position: .word 0
 
+
+@@@ -----------------------------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 .text
 
+@ Reset value of the co processors reading time
 cop_reading_time_reset: .word 1000
 addr_cop_reading_time: .word cop_reading_time
 
 addr_is_running: 	.word is_running
 
+@@@ Method to print text to the console
 .extern printf
-.extern sleep
 
 @@@ Methods from the co_processor.S ---------------------------------------------------------
 .extern cop_init
@@ -113,6 +116,7 @@ main:
 	push {fp, lr}
 	mov fp, sp
 
+	@ Print the inital message
 	ldr r0, =msg_init
 	bl printf
 
@@ -194,11 +198,11 @@ main:
 			ldr r0, =color_array
 			ldr r2, =outlet_position
 			ldr r1, [r2]
+			str r5, [r2]
 
 			@ calculate offset
 			subs r1, r5, r1
 			addmi r1, r1, #6
-			str r1, [r2]
 
 			ldr r1, [r0, r1, LSL #2]
 			cmp r1, #0
@@ -338,58 +342,6 @@ machine_stop:
 
 	pop {lr}
 	bx lr
-
-
-/*
-calibration:
-	bl cop_wakeup
-
-	bl color_wheel_calibrate
-
-	bl outlet_calibrate
-
-	bl feeder_on
-
-main_loop:
-	bl color_wheel_rotate90
-
-	bl cop_read_color
-
-	cmp r0, #-1
-	beq main_loop
-
-	@@ position outlet
-	ldr r2, =color_array
-	ldr r3, =outlet_position
-	ldr r1, [r3]
-
-	@ calculate offset
-	subs r1, r0, r1
-	addmi r1, r1, #6
-	str r1, [r3]
-	mov r1, r1, LSL #2
-
-	ldr r1, [r2, +r1]
-
-	@rotate outlet
-	cmp r1, #0
-	blt counterclockwise
-	beq no_rotation
-	clockwise:
-		bl outlet_rotate60_clockwise
-		subs r1, #1
-		bpl clockwise
-		beq no_rotation
-	counterclockwise:
-		bl outlet_rotate60_counterclockwise
-		adds r1, #1
-		bmi counterclockwise
-	no_rotation:
-		b main_loop
-*/
-
-
-
 
 
 

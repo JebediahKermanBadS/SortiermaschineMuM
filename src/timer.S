@@ -72,4 +72,8 @@ timer_set_enable:
 	orrne r0, #1 << 7 	@ Enable the timer
 	str r0, [rTIMER, #0x408]
 
+	@ Clear the interrupt pending bit
+	mov r0, #1
+	str r0, [rTIMER, #0x40C]
+
 	bx lr

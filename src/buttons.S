@@ -59,14 +59,14 @@ buttons_init:
 	bic r0, #0b111
 	str r0, [rGPIO, #GPFSET1]
 
-	@ Enable RISING EDGE detect for all buttons
+	@ Disable RISING EDGE detect for all buttons
 	ldr r0, [rGPIO, #GPREN0]
-	orr r0, #0b111 << pin_nBTN1
+	bic r0, #0b111 << pin_nBTN1
 	str r0, [rGPIO, #GPREN0]
 
-	@ Disable FALLING EDGE detect for all buttons
+	@ Enable FALLING EDGE detect for all buttons
 	ldr r0, [rGPIO, #GPFEN0]
-	bic r0, #0b111 << pin_nBTN1
+	orr r0, #0b111 << pin_nBTN1
 	str r0, [rGPIO, #GPFEN0]
 
 	@ Disable HIGH detect for all buttons
@@ -78,5 +78,9 @@ buttons_init:
 	ldr r0, [rGPIO, #GPLEN0]
 	bic r0, #0b111 << pin_nBTN1
 	str r0, [rGPIO, #GPLEN0]
+
+	@ Clear pending event detect bit
+	mov r0, #0b111 << pin_nBTN1
+	str r0, [rGPIO, #GPEDS0]
 
 	bx lr

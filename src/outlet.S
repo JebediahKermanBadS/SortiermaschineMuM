@@ -44,12 +44,12 @@
 .align 4
 offset_flag:	.word 0
 rotation_steps: 	.word 67
-timer_event_count:	.word 1
+timer_event_count:	.word 2
 calibration_state:	.word case_calibrate_start
 calibrate_steps_in_hall:	.word 0
 
 .text
-speed_in_ms: .word 2
+speed_in_ms: .word 4
 
 addr_rotation_steps: 	.word rotation_steps
 addr_timer_event_count: .word timer_event_count
@@ -245,10 +245,16 @@ outlet_calibrate:
 		mov r0, #0
 		b outlet_calibrate_end
 
-		outlet_calibrate_not_finished:
+	outlet_calibrate_not_finished:
 		@ Return code, that the calibration is NOT finished
+		ldr r4, addr_calibration_state
+		ldr r4, [r4]
+		ldr r0, =outlet_calibrate_end
+		cmp r0, r4
 		mov r0, #1
-		outlet_calibrate_end:
+		moveq r0, #0
+
+	outlet_calibrate_end:
 		pop {r4, lr}
 		bx lr
 
@@ -323,7 +329,7 @@ outlet_rotate60_clockwise:
 outlet_rotate_counterclockwise_initiate:
 	push {r4, r5, r6, lr}
 	mov r1, #-67
-	mul r1, r1, r0
+	mul r1, r0
 
 	ldr r4, addr_rotation_steps
 	str r1, [r4]

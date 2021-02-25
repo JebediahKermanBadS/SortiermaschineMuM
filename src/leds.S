@@ -18,6 +18,16 @@
 
 .data
 
+@@@ Inputs: r0: (0 = Red, 1 = Green, 2 = Blue, 3 = Brown, 4 = Orange, 5 = Yellow)
+.align 4
+outletpos_to_ledpos:
+	.word 2
+	.word 1
+	.word 3
+	.word 5
+	.word 6
+	.word 4
+
 @@@ Define the colors for the leds as array with the size 6
 .align 4
 color_array:
@@ -81,18 +91,21 @@ leds_DeInit:
 leds_showColor:
 	push {lr}
 
+	@ Get the color in hex from the color array and store in stack
 	ldr r1, =color_array
 	ldr r1, [r1, r0, LSL #2]
-	add r0, r0, #1
+	str r1, [sp, #-4]!			@ Stack: (sp)Color
 
-	str r0, [sp, #-4]!
-	str r1, [sp, #-4]!
+	@ Get the position of the led to show and store in stack
+	ldr r1, =outletpos_to_ledpos
+	ldr r1, [r1, r0, LSL #2]
+	str r0, [sp, #-4]!			@ Stack: (sp)LedPos, Color
 
 	bl WS2812RPi_AllOff
 	bl WS2812RPi_Show
 
-	ldr r1, [sp], #4
-	ldr r0, [sp], #4
+	ldr r0, [sp], #4			@ Stack: (sp)Color
+	ldr r1, [sp], #4			@ Stack: None
 
 	bl WS2812RPi_SetSingle
 	bl WS2812RPi_Show
