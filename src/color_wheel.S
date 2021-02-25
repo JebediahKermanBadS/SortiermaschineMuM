@@ -248,7 +248,12 @@ color_wheel_calibrate:
 
 	color_wheel_calibrate_not_finished:
 		@ Return code, that the calibration is NOT finished
+		ldr r4, addr_calibration_state
+		ldr r4, [r4]
+		ldr r0, =color_wheel_calibrate_end
+		cmp r0, r4
 		mov r0, #1
+		moveq r0, #0 @ Is finished return code
 	color_wheel_calibrate_end:
 		pop {r4, lr}
 		bx lr

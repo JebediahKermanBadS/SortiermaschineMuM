@@ -245,10 +245,16 @@ outlet_calibrate:
 		mov r0, #0
 		b outlet_calibrate_end
 
-		outlet_calibrate_not_finished:
+	outlet_calibrate_not_finished:
 		@ Return code, that the calibration is NOT finished
+		ldr r4, addr_calibration_state
+		ldr r4, [r4]
+		ldr r0, =outlet_calibrate_end
+		cmp r0, r4
 		mov r0, #1
-		outlet_calibrate_end:
+		moveq r0, #0
+
+	outlet_calibrate_end:
 		pop {r4, lr}
 		bx lr
 
