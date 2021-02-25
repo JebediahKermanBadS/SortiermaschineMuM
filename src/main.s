@@ -41,21 +41,19 @@
 .align 4
 
 msg_init: .asciz "M&M Sorting Machine started!\nThis is a program from the following group:\n\t- Demiroez, Dilara\n\t- Gonther, Levin\n\t- Grajczak, Benjamin\n\t- Pfister, Marc\n"
-
 msg_gpio_mem: 	.asciz "Gpio memory is: %p\n"
 msg_timer_mem: 	.asciz "Timer memory is: %p\n"
-
-msg_print_int: 	.asciz "%d\n"
-msg_print_hex: 	.asciz "%x\n"
-
 msg_calibration_finished: .asciz "The calibration of the outlet and the color wheel is finished.\n"
 
+@ This is the waiting remaining time for the co-processor to read a color (in ms). Reset value is defined in cop_reading_time_reset
 .align 4
 cop_reading_time: .word 1000
 
+@ If the machine is running this is 1
 .align 4
 is_running:	.word 0
 
+@ Used in the calculation of the outlet position
 .align 4
 color_array: .word 0
 			 .word 1
@@ -64,18 +62,23 @@ color_array: .word 0
 			 .word -2
 			 .word -1
 
+@ The current outlet position
 .align 4
 outlet_position: .word 0
 
+
+@@@ -----------------------------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 .text
 
+@ Reset value of the co processors reading time
 cop_reading_time_reset: .word 1000
 addr_cop_reading_time: .word cop_reading_time
 
 addr_is_running: 	.word is_running
 
+@@@ Method to print text to the console
 .extern printf
-.extern sleep
 
 @@@ Methods from the co_processor.S ---------------------------------------------------------
 .extern cop_init
@@ -113,6 +116,7 @@ main:
 	push {fp, lr}
 	mov fp, sp
 
+	@ Print the inital message
 	ldr r0, =msg_init
 	bl printf
 
