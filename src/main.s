@@ -194,11 +194,11 @@ main:
 			ldr r0, =color_array
 			ldr r2, =outlet_position
 			ldr r1, [r2]
+			str r5, [r2]
 
 			@ calculate offset
 			subs r1, r5, r1
 			addmi r1, r1, #6
-			str r1, [r2]
 
 			ldr r1, [r0, r1, LSL #2]
 			cmp r1, #0
@@ -338,58 +338,6 @@ machine_stop:
 
 	pop {lr}
 	bx lr
-
-
-/*
-calibration:
-	bl cop_wakeup
-
-	bl color_wheel_calibrate
-
-	bl outlet_calibrate
-
-	bl feeder_on
-
-main_loop:
-	bl color_wheel_rotate90
-
-	bl cop_read_color
-
-	cmp r0, #-1
-	beq main_loop
-
-	@@ position outlet
-	ldr r2, =color_array
-	ldr r3, =outlet_position
-	ldr r1, [r3]
-
-	@ calculate offset
-	subs r1, r0, r1
-	addmi r1, r1, #6
-	str r1, [r3]
-	mov r1, r1, LSL #2
-
-	ldr r1, [r2, +r1]
-
-	@rotate outlet
-	cmp r1, #0
-	blt counterclockwise
-	beq no_rotation
-	clockwise:
-		bl outlet_rotate60_clockwise
-		subs r1, #1
-		bpl clockwise
-		beq no_rotation
-	counterclockwise:
-		bl outlet_rotate60_counterclockwise
-		adds r1, #1
-		bmi counterclockwise
-	no_rotation:
-		b main_loop
-*/
-
-
-
 
 
 
