@@ -265,7 +265,7 @@ outlet_calibrate:
 outlet_rotate_clockwise_initiate:
 	push {r4, r5, r6, lr}
 	mov r1, #67
-	mul r1, r0, r1
+	mul r1, r0
 
 	ldr r4, addr_rotation_steps
 	str r1, [r4]
