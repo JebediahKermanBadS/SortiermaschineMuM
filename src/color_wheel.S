@@ -48,7 +48,7 @@ calibration_state:	.word case_calibrate_start
 calibrate_steps_in_hall:	.word 0
 
 .text
-speed_in_ms: 		.word 2
+speed_in_ms: 		.word 4
 @speed_in_ms: 		.word 40
 
 addr_rotation_steps: 	.word rotation_steps

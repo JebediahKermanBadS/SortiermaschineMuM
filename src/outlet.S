@@ -44,12 +44,12 @@
 .align 4
 offset_flag:	.word 0
 rotation_steps: 	.word 67
-timer_event_count:	.word 1
+timer_event_count:	.word 2
 calibration_state:	.word case_calibrate_start
 calibrate_steps_in_hall:	.word 0
 
 .text
-speed_in_ms: .word 2
+speed_in_ms: .word 4
 
 addr_rotation_steps: 	.word rotation_steps
 addr_timer_event_count: .word timer_event_count
