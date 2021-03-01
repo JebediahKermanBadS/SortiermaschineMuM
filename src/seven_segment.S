@@ -62,6 +62,8 @@
 outputbits_clr_value: .word 0xFFFFC0
 outputbits_set_value: .word 0x249240
 
+.extern usleep
+
 .global segment7_init
 .global segment7_setvalue
 .global segment7_next
@@ -137,7 +139,7 @@ segment7_next:
 
 		@ Sleep 1us
 		mov r0, #1
-		usleep
+		bl usleep
 
 		subs r5, #1
 		bne next_loop
