@@ -31,12 +31,12 @@ outletpos_to_ledpos:
 @@@ Define the colors for the leds as array with the size 6
 .align 4
 color_array:
- 	.word 0x00FF00 @Green
 	.word 0xFF0000 @Red
+ 	.word 0x00FF00 @Green
  	.word 0x0000FF @Blue
- 	.word 0xFFFF00 @Yellow
  	.word 0x654321 @Brown
  	.word 0xFF8800 @Orange
+ 	.word 0xFFFF00 @Yellow
 
 .text
 
@@ -99,7 +99,7 @@ leds_showColor:
 	@ Get the position of the led to show and store in stack
 	ldr r1, =outletpos_to_ledpos
 	ldr r1, [r1, r0, LSL #2]
-	str r0, [sp, #-4]!			@ Stack: (sp)LedPos, Color
+	str r1, [sp, #-4]!			@ Stack: (sp)LedPos, Color
 
 	bl WS2812RPi_AllOff
 	bl WS2812RPi_Show
