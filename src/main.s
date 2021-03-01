@@ -13,17 +13,8 @@
 	rTIMER	.req r9
 	rGPIO	.req r10
 
-@@@ Pins of the 7-Segment Display -----------------------------------------------------------
-	.equ pin_SER,		2
-	.equ pin_SRCLK,		3
-	.equ pin_nSRCLR,	4
-	.equ pin_RCLK,		5
-	.equ pin_SEG_A,		6
-	.equ pin_SEG_B,		7
-
 @@@ Pins for the objectsensor in the outlet -------------------------------------------------
 	.equ pin_objCW,		25
-	.equ pin_dirOut,	26
 
 @@@ Define the offset for the GPIO Registers ------------------------------------------------
 	.equ GPFSET0, 	0x00
@@ -111,6 +102,8 @@ addr_is_running: 	.word is_running
 .extern outlet_rotate60_clockwise
 .extern outlet_rotate60_counterclockwise
 
+.extern segment7_init
+
 .global main
 main:
 	push {fp, lr}
@@ -150,6 +143,7 @@ main:
 	bl outlet_init
 	bl timer_init
 	bl buttons_init
+	bl segment7_init
 
 	bl calibrate
 
@@ -159,12 +153,20 @@ main:
 	ldr r4, =case_rotate_color_wheel
 	mov r5, #-1 						@ r5: readed color
 	main_loop:
+
 		ldr r0, [rTIMER, #0x410]
 		cmp r0, #0
 		beq check_btn
 
+		bl segment7_next
+
+		ldr r0, =is_running
+		ldr r0, [r0]
+		cmp r0, #0
+		beq check_btn
+
+
 		@ Else:
-		str r0, [rTIMER, #0x40C]
 		mov pc, r4
 		case_rotate_color_wheel:
 			bl color_wheel_rotate90
@@ -235,7 +237,8 @@ main:
 			b case_end
 
 		case_end:
-
+		ldr r0, [rTIMER, #0x410]
+		str r0, [rTIMER, #0x40C]
 
 		check_btn:
 			ldr r0, [rGPIO, #GPEDS0]
@@ -299,8 +302,6 @@ calibrate:
 	bl colow_wheel_set_enable
 	mov r0, #0
 	bl outlet_set_enable
-	mov r0, #0
-	bl timer_set_enable
 	bl cop_sleep
 
 	pop {r4, lr}
@@ -333,8 +334,6 @@ machine_stop:
 	bl colow_wheel_set_enable
 	mov r0, #0
 	bl outlet_set_enable
-	mov r0, #0
-	bl timer_set_enable
 
 	mov r1, #0
 	ldr r0, addr_is_running
