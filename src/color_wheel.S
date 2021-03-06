@@ -119,7 +119,7 @@ colow_wheel_set_enable:
 color_wheel_calibrate:
 	push {r4, lr}
 
-	@ The timer is calling this method every time he counted to 0. This is probably to fast,
+	@ The timer is calling this method every time he counted to 0. This is to fast,
 	@ so we have to count how often the method is called and cancel the execution if the count
 	@ is not high enough
 	ldr r0, addr_timer_event_count
@@ -146,6 +146,15 @@ color_wheel_calibrate:
 
 		ldreq r0, =case_hall_already_active		@ Hall == 0 : Is active
 		ldrne r0, =case_calibrate_before_hall	@ Hall != 1 : Not active
+
+		mov r1, #1 << DirCW_PIN
+
+		@ Set the direction to clockwise if the wheel is before the hallsensor
+		strne r1, [rGPIO, #GPCLR0]
+
+		@ Set the direction to counterclockwise if the wheel is at the hallsensor
+		streq r1, [rGPIO, #GPSET0]
+
 		str r0, [r4]		@ Save the next case address in 'calibration_state'
 		mov pc, r0
 
@@ -163,7 +172,11 @@ color_wheel_calibrate:
 		@ HallSensor == 0 -> jump to the end
 		beq color_wheel_calibrate_not_finished
 
-		@ Else save the address for the next case and jump to the end
+		@ Set the direction to clockwise
+		mov r1, #1 << DirCW_PIN
+		strne r1, [rGPIO, #GPCLR0]
+
+		@ Save the address for the next case and jump to the end
 		ldr r0, =case_calibrate_before_hall
 		str r0, [r4]
 		b color_wheel_calibrate_not_finished

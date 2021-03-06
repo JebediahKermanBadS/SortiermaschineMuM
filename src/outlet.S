@@ -146,6 +146,15 @@ outlet_calibrate:
 
 		ldreq r0, =case_hall_already_active		@ Hall == 0 : Is active
 		ldrne r0, =case_calibrate_before_hall	@ Hall != 1 : Not active
+
+		mov r1, #1 << DirOut_PIN
+
+		@ Set the direction to counterclockwise if the hall sensor is already active
+		streq r1, [rGPIO, #GPSET0]
+
+		@ Set the direction to clockwise if the hall sensor is not active
+		strne r1, [rGPIO, #GPCLR0]
+
 		str r0, [r4]		@ Save the next case address in 'calibration_state'
 		mov pc, r0
 
@@ -161,6 +170,10 @@ outlet_calibrate:
 
 		@ HallSensor == 0 -> jump to the end
 		beq outlet_calibrate_not_finished
+
+		@ Set the direction to clockwise
+		mov r1, #1 << DirOut_PIN
+		str r1, [rGPIO, #GPCLR0]
 
 		@ Else save the address for the next case and jump to the end
 		ldr r0, =case_calibrate_before_hall
