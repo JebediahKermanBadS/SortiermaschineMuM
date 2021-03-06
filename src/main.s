@@ -154,6 +154,10 @@ main:
 	mov r5, #-1 						@ r5: read color
 	main_loop:
 
+		ldr r0, [rGPIO, #GPLEV0]
+		ands r0, #1 << pin_objCW
+		beq machine_stop		@ Object Pin == 0 : No M&M detected
+
 		ldr r0, [rTIMER, #0x410]
 		cmp r0, #0
 		beq check_btn
@@ -172,6 +176,7 @@ main:
 			bl color_wheel_rotate90
 			cmp r0, #0
 			ldreq r4, =case_read_color
+			ldreq r
 
 			b case_end
 
