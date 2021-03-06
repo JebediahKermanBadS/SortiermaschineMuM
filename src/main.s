@@ -176,7 +176,6 @@ main:
 			bl color_wheel_rotate90
 			cmp r0, #0
 			ldreq r4, =case_read_color
-			ldreq r
 
 			b case_end
 
