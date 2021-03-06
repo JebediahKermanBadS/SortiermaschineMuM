@@ -151,7 +151,7 @@ main:
 	bl printf
 
 	ldr r4, =case_rotate_color_wheel
-	mov r5, #-1 						@ r5: readed color
+	mov r5, #-1 						@ r5: read color
 	main_loop:
 
 		ldr r0, [rTIMER, #0x410]
