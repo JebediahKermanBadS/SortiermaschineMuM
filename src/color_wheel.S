@@ -57,7 +57,7 @@ addr_calibration_state:	.word calibration_state
 addr_calibrate_steps_in_hall: .word calibrate_steps_in_hall
 
 .global color_wheel_init
-.global colow_wheel_set_enable
+.global color_wheel_set_enable
 .global color_wheel_calibrate
 .global color_wheel_rotate90
 .global color_wheel_reset_rotation
@@ -100,7 +100,7 @@ color_wheel_init:
 @@@ Inputs: r0 >= 1 -> enabled
 @@@			r0 == 0 -> disabled
 @@@ Return: None
-colow_wheel_set_enable:
+color_wheel_set_enable:
 	cmp r0, #0
 	orr r0, r0, #0x01 << nRSTCW_PIN
 	strne r0, [rGPIO, #GPSET0]		@ Enable the motor driver

@@ -277,7 +277,7 @@ calibrate:
 	push {r4, lr}
 
 	mov r0, #1
-	bl colow_wheel_set_enable
+	bl color_wheel_set_enable
 	mov r0, #1
 	bl outlet_set_enable
 	mov r0, #1
@@ -299,7 +299,7 @@ calibrate:
 		cmp r4, #0
 		bgt calibrate_loop
 
-	bl colow_wheel_set_enable
+	bl color_wheel_set_enable
 	mov r0, #0
 	bl outlet_set_enable
 	bl cop_sleep
@@ -313,7 +313,7 @@ machine_start:
 	bl feeder_on
 	bl cop_wakeup
 	mov r0, #1
-	bl colow_wheel_set_enable
+	bl color_wheel_set_enable
 	mov r0, #1
 	bl outlet_set_enable
 	mov r0, #1
@@ -331,7 +331,7 @@ machine_stop:
 	bl feeder_off
 	bl cop_sleep
 	mov r0, #0
-	bl colow_wheel_set_enable
+	bl color_wheel_set_enable
 	mov r0, #0
 	bl outlet_set_enable
 
