@@ -1,20 +1,17 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2021/02/20
+@@@	   Date:	2021/03/13
 @@@ Group members:
-@@@		- Demiroez Dilara
+@@@		- Demiroez, Dilara
 @@@		- Gonther, Levin
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
 
-@@@ Renamimg registers ----------------------------------------------------------------------
+@@@ Renamimg registers. !This registers have to be constant! --------------------------------
 	rTIMER	.req r9
 	rGPIO	.req r10
-
-@@@ Pins for the objectsensor in the outlet -------------------------------------------------
-	.equ pin_objCW,		25
 
 @@@ Define the offset for the GPIO Registers ------------------------------------------------
 	.equ GPFSET0, 	0x00
@@ -23,17 +20,23 @@
 	.equ GPCLR0,	0x28
 	.equ GPLVL0,	0x34
 
-
-	.equ pin_nBTN1,		8
+	.equ pin_nBTN1,	8
 	.equ GPEDS0,	0x40
 
 
+@@@ -----------------------------------------------------------------------------------------
+@@@ -----------------------------------------------------------------------------------------
 .data
-.align 4
 
+.align 4
 msg_init: .asciz "M&M Sorting Machine started!\nThis is a program from the following group:\n\t- Demiroez, Dilara\n\t- Gonther, Levin\n\t- Grajczak, Benjamin\n\t- Pfister, Marc\n"
+
+.align 4
 msg_gpio_mem: 	.asciz "Gpio memory is: %p\n"
+.align 4
 msg_timer_mem: 	.asciz "Timer memory is: %p\n"
+
+.align 4
 msg_calibration_finished: .asciz "The calibration of the outlet and the color wheel is finished.\n"
 
 @ This is the waiting remaining time for the co-processor to read a color (in ms). Reset value is defined in cop_reading_time_reset
@@ -44,6 +47,7 @@ cop_reading_time: .word 1000
 .align 4
 is_running:	.word 0
 
+@ If this is 1, the machine should stop very soon.
 .align 4
 is_stopping:	.word 0
 
@@ -137,7 +141,7 @@ main:
 	mov r1, rTIMER
 	bl printf
 
-	@@@ Init all the hardware ---------------------------------------------------------------
+	@ Init all the hardware components
 	bl cop_init
 	bl color_wheel_init
 	bl feeder_init
@@ -146,29 +150,33 @@ main:
 	bl timer_init
 	bl buttons_init
 
+	@ Calibrate the color wheel and the outlet
 	bl calibrate
 	ldr r0, =msg_calibration_finished
 	bl printf
 
+	@ r4: Current case to execute in the switch
+	@ r5: The last readed color
 	ldr r4, =case_rotate_color_wheel
-	mov r5, #-1 						@ r5: read color
+	mov r5, #-1
 	main_loop:
 
-		ldr r0, [rGPIO, #GPLEV0]
-		ands r0, #1 << pin_objCW
-		beq machine_stop		@ Object Pin == 0 : No M&M detected
-
+		@ Chchek if the timer interrupt pending bit is set
 		ldr r0, [rTIMER, #0x410]
 		cmp r0, #0
 		beq check_btn
 
+		@ Check if the machine is running
 		ldr r0, =is_running
 		ldr r0, [r0]
 		cmp r0, #0
 		beq check_btn
 
-		@ Else:
+		@ If the machine is running and the timer pending bit is set:
+		@ Jump to the current case
 		mov pc, r4
+
+		@ This is the start case. The program is execution this so that the color wheel is rotating exactly 90°
 		case_rotate_color_wheel:
 			bl color_wheel_rotate90
 			cmp r0, #0
@@ -176,7 +184,9 @@ main:
 
 			b case_end
 
+		@ If the color wheel is done, then the program is going to wait 1second to read the color of the M&M
 		case_read_color:
+			@ Check if 1 second is over
 			ldr r0, addr_cop_reading_time
 			ldr r1, [r0]
 			subs r1, #1
@@ -207,6 +217,7 @@ main:
 			subs r1, r5, r1
 			addmi r1, r1, #6
 
+			@ Check if the outlet has to rotate clockwise / counterclockwise / none
 			ldr r1, [r0, r1, LSL #2]
 			cmp r1, #0
 			ldreq r4, =case_rotate_color_wheel  @ r1 == 0
@@ -224,6 +235,7 @@ main:
 
 			b case_end
 
+		@ If the outlet has to rotate clockwise
 		case_rotate_outlet_clockwise:
 			bl outlet_rotate60_counterclockwise
 			cmp r0, #0
@@ -232,6 +244,7 @@ main:
 
 			b case_end
 
+		@ If the outlet has to rotate conterclockwise
 		case_rotate_outlet_cclockwise:
 			bl outlet_rotate60_counterclockwise
 			cmp r0, #0
@@ -248,22 +261,30 @@ main:
 			str r1, [r0]
 			bleq machine_stop
 
+		@ End of the switch. Clear the interrupt pending bit
 		case_end:
 		ldr r0, [rTIMER, #0x410]
 		str r0, [rTIMER, #0x40C]
 
 		check_btn:
+			@ Check if the start stop button is pressed.
 			ldr r0, [rGPIO, #GPEDS0]
 			ands r0, #1 << pin_nBTN1
 			beq main_loop
 
+			@ If pressed:
+			@ Clear the event detect bit
 			str r0, [rGPIO, #GPEDS0]
 
+			@ Check if the machine is currently running
 			ldr r0, addr_is_running
 			ldr r0, [r0]
 			cmp r0, #0
 			str r0, [sp, #-4]!
+			@ Start the machine if its not running
 			bleq machine_start
+
+			@ Let the machine finish the sorting of the current M&M and stop after.
 			ldr r0, [sp], #4
 			cmp r0, #1
 			mov r1, #1
@@ -287,6 +308,10 @@ main_end:
 	bx lr
 
 
+@@@ -----------------------------------------------------------------------------------------
+@@@ Calibrate the outlet and the color wheel
+@@@ Inputs: None
+@@@ Return: None
 calibrate:
 	push {r4, lr}
 
@@ -294,10 +319,10 @@ calibrate:
 	mov r1, #0
 	str r1, [r0]
 
-
 	bl color_wheel_calibration_reset
 	bl outlet_calibrate_reset
 
+	@ Enable all hardware components
 	mov r0, #1
 	bl color_wheel_set_enable
 	mov r0, #1
@@ -305,6 +330,8 @@ calibrate:
 	mov r0, #1
 	bl timer_set_enable
 	bl cop_wakeup
+
+	@ Calibrate as long the calibration is not done
 	calibrate_loop:
 		ldr r0, [rTIMER, #0x410]
 		cmp r0, #0
@@ -321,6 +348,7 @@ calibrate:
 		cmp r4, #0
 		bgt calibrate_loop
 
+	@ Disable all the hardware components
 	bl color_wheel_set_enable
 	mov r0, #0
 	bl outlet_set_enable
@@ -329,6 +357,11 @@ calibrate:
 	pop {r4, lr}
 	bx lr
 
+
+@@@ -----------------------------------------------------------------------------------------
+@@@ Enable all hadware components and start the machine
+@@@ Inputs: None
+@@@ Return: None
 machine_start:
 	push {lr}
 
@@ -350,6 +383,11 @@ machine_start:
 	pop {lr}
 	bx lr
 
+
+@@@ -----------------------------------------------------------------------------------------
+@@@ Disable all hardwarecomponents and stop the machine
+@@@ Inputs: None
+@@@ Return: None
 machine_stop:
 	push {lr}
 	bl feeder_off

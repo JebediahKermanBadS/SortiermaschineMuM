@@ -1,7 +1,6 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/02/04
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -33,7 +32,7 @@
 .global feeder_off
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ This method initializes the feeder (Define the pin as outpu)
+@@@ This method initializes the feeder (Define the pin as output)
 @@@ Inputs: None
 @@@ Return: None
 feeder_init:

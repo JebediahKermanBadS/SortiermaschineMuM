@@ -1,7 +1,6 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/04/02
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin

@@ -1,7 +1,6 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/02/17
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -96,6 +95,7 @@ color_wheel_init:
 
 	bx lr
 
+
 @@@ -----------------------------------------------------------------------------------------
 @@@ Enable the color wheel
 @@@ Inputs: r0 >= 1 -> enabled
@@ -111,6 +111,7 @@ color_wheel_set_enable:
 	str r0, [rGPIO, #GPCLR0]		@ Set the direction to clockwise
 
 	bx lr
+
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Calibrate the color-wheel with the hall-sensor. Call this in the beggining of the program
@@ -280,6 +281,7 @@ color_wheel_calibration_reset:
 
 	bx lr
 
+
 @@@ -----------------------------------------------------------------------------------------
 @@@ Make 400 Steps wiht the color-wheel. This is exactly a rotation of 90 degrees
 @@@ Inputs: None
@@ -330,12 +332,18 @@ color_wheel_rotate90:
 		pop {r4, lr}
 		bx lr
 
+
+@@@ -----------------------------------------------------------------------------------------
+@@@ Reset the rotation of the color wheel to rotate 90° again
+@@@ Inputs: None
+@@@ Return: None
 color_wheel_reset_rotation:
 	ldr r0, addr_rotation_steps
 	mov r1, #400
 	str r1, [r0]
 
 	bx lr
+
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Make a step with the color wheel
