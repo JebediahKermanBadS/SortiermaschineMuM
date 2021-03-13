@@ -60,6 +60,7 @@ addr_calibrate_steps_in_hall: .word calibrate_steps_in_hall
 .global outlet_init
 .global outlet_set_enable
 .global outlet_calibrate
+.global outlet_calibrate_reset
 .global outlet_rotate_clockwise_initiate
 .global outlet_rotate60_clockwise
 .global outlet_rotate_counterclockwise_initiate
@@ -270,6 +271,12 @@ outlet_calibrate:
 	outlet_calibrate_end:
 		pop {r4, lr}
 		bx lr
+
+outlet_calibrate_reset:
+	ldr r0, addr_calibration_state
+	ldr r1, =case_calibrate_start
+	str r1, [r0]
+	bx lr
 
 @@@ ----------------------------------------------------------------------------------------
 @@@ Rotate the Outlet in 60 degree Steps clockwise

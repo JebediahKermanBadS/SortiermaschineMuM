@@ -44,6 +44,9 @@ cop_reading_time: .word 1000
 .align 4
 is_running:	.word 0
 
+.align 4
+is_stopping:	.word 0
+
 @ Used in the calculation of the outlet position
 .align 4
 color_array: .word 0
@@ -67,6 +70,7 @@ cop_reading_time_reset: .word 1000
 addr_cop_reading_time: .word cop_reading_time
 
 addr_is_running: 	.word is_running
+addr_is_stopping: 	.word is_stopping
 
 @@@ Method to print text to the console
 .extern printf
@@ -101,8 +105,6 @@ addr_is_running: 	.word is_running
 .extern outlet_calibrate
 .extern outlet_rotate60_clockwise
 .extern outlet_rotate60_counterclockwise
-
-.extern segment7_init
 
 .global main
 main:
@@ -143,10 +145,8 @@ main:
 	bl outlet_init
 	bl timer_init
 	bl buttons_init
-	bl segment7_init
 
 	bl calibrate
-
 	ldr r0, =msg_calibration_finished
 	bl printf
 
@@ -158,13 +158,10 @@ main:
 		cmp r0, #0
 		beq check_btn
 
-		bl segment7_next
-
 		ldr r0, =is_running
 		ldr r0, [r0]
 		cmp r0, #0
 		beq check_btn
-
 
 		@ Else:
 		mov pc, r4
@@ -209,6 +206,7 @@ main:
 			ldr r1, [r0, r1, LSL #2]
 			cmp r1, #0
 			ldreq r4, =case_rotate_color_wheel  @ r1 == 0
+			beq check_is_stopping
 			ldrlt r4, =case_rotate_outlet_cclockwise		@ r1 < 0
 			ldrgt r4, =case_rotate_outlet_clockwise
 
@@ -226,6 +224,7 @@ main:
 			bl outlet_rotate60_counterclockwise
 			cmp r0, #0
 			ldreq r4, =case_rotate_color_wheel
+			beq check_is_stopping
 
 			b case_end
 
@@ -233,8 +232,17 @@ main:
 			bl outlet_rotate60_counterclockwise
 			cmp r0, #0
 			ldreq r4, =case_rotate_color_wheel
+			beq check_is_stopping
 
 			b case_end
+
+		check_is_stopping:
+			ldr r0, addr_is_stopping
+			ldr r1, [r0]
+			cmp r1, #1
+			mov r1, #0
+			str r1, [r0]
+			bleq machine_stop
 
 		case_end:
 		ldr r0, [rTIMER, #0x410]
@@ -254,7 +262,9 @@ main:
 			bleq machine_start
 			ldr r0, [sp], #4
 			cmp r0, #1
-			bleq machine_stop
+			mov r1, #1
+			ldreq r0, addr_is_stopping
+			streq r1, [r0]
 
 		b main_loop
 
@@ -275,6 +285,14 @@ main_end:
 
 calibrate:
 	push {r4, lr}
+
+	ldr r0, =outlet_position
+	mov r1, #0
+	str r1, [r0]
+
+
+	bl color_wheel_calibration_reset
+	bl outlet_calibrate_reset
 
 	mov r0, #1
 	bl color_wheel_set_enable
@@ -309,6 +327,8 @@ calibrate:
 
 machine_start:
 	push {lr}
+
+	bl calibrate
 
 	bl feeder_on
 	bl cop_wakeup

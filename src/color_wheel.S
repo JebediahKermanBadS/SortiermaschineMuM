@@ -61,6 +61,7 @@ addr_calibrate_steps_in_hall: .word calibrate_steps_in_hall
 .global color_wheel_calibrate
 .global color_wheel_rotate90
 .global color_wheel_reset_rotation
+.global color_wheel_calibration_reset
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Initialize the pins for the color wheel as input/output
@@ -270,6 +271,14 @@ color_wheel_calibrate:
 	color_wheel_calibrate_end:
 		pop {r4, lr}
 		bx lr
+
+color_wheel_calibration_reset:
+
+	ldr r0, addr_calibration_state
+	ldr r1, =case_calibrate_start
+	str r1, [r0]
+
+	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
 @@@ Make 400 Steps wiht the color-wheel. This is exactly a rotation of 90 degrees
