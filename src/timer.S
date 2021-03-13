@@ -7,10 +7,10 @@
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
-@@@ This document provides methods to init the timer and enable/disable it
+@@@ This document provides methods to initialize the timer and enable/disable it
 @@@ -----------------------------------------------------------------------------------------
 
-@@@ Renamimg registers ----------------------------------------------------------------------
+@@@ Renaming registers ----------------------------------------------------------------------
 	rTIMER	.req r9
 	rGPIO	.req r10
 

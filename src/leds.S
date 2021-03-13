@@ -27,7 +27,7 @@ outletpos_to_ledpos:
 	.word 6
 	.word 1
 
-@@@ Define the colors for the leds as array with the size 6
+@@@ Define the colors for the leds as an array with the size 6
 .align 4
 color_array:
 	.word 0xFF0000 @Red
@@ -53,7 +53,7 @@ color_array:
 .extern WS2812RPi_Show
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ This method initialize the leds
+@@@ This method initializes the leds
 @@@ Inputs: None
 @@@ Return: None
 leds_Init:
@@ -71,7 +71,7 @@ leds_Init:
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ This method deinitialize the leds
+@@@ This method deinitializes the leds
 @@@ Inputs: None
 @@@ Return: None
 leds_DeInit:

@@ -9,7 +9,7 @@
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
 
-@@@ Renamimg registers. !This registers have to be constant! --------------------------------
+@@@ Renaming registers. !These registers have to be constant! --------------------------------
 	rTIMER	.req r9
 	rGPIO	.req r10
 
@@ -39,7 +39,7 @@ msg_timer_mem: 	.asciz "Timer memory is: %p\n"
 .align 4
 msg_calibration_finished: .asciz "The calibration of the outlet and the color wheel is finished.\n"
 
-@ This is the waiting remaining time for the co-processor to read a color (in ms). Reset value is defined in cop_reading_time_reset
+@ This is the waiting time for the co-processor to read a color (in ms). Reset value is defined in cop_reading_time_reset
 .align 4
 cop_reading_time: .word 1000
 
@@ -47,11 +47,11 @@ cop_reading_time: .word 1000
 .align 4
 is_running:	.word 0
 
-@ If this is 1, the machine should stop very soon.
+@ If this is 1, the machine stops very soon.
 .align 4
 is_stopping:	.word 0
 
-@ Used in the calculation of the outlet position
+@ Is used in the calculation of the outlet position
 .align 4
 color_array: .word 0
 			 .word 1
@@ -79,18 +79,18 @@ addr_is_stopping: 	.word is_stopping
 @@@ Method to print text to the console
 .extern printf
 
-@@@ Methods from the co_processor.S ---------------------------------------------------------
+@@@ Methods from co_processor.S ---------------------------------------------------------
 .extern cop_init
 .extern cop_wakeup
 .extern cop_sleep
 .extern cop_read_color
 
-@@@ Methods from the color_wheel.S ----------------------------------------------------------
+@@@ Methods from color_wheel.S ----------------------------------------------------------
 .extern color_wheel_init
 .extern color_wheel_calibrate
 .extern color_wheel_rotate90
 
-@@@ Methods from the feeder.S ---------------------------------------------------------------
+@@@ Methods from feeder.S ---------------------------------------------------------------
 .extern feeder_init
 .extern feeder_on
 .extern feeder_off
@@ -131,17 +131,17 @@ main:
 	cmp rTIMER, #-1
 	beq main_end
 
-	@ Print the virtual address for the gpio reigsters
+	@ Print the virtual address for the gpio registers
 	ldr r0, =msg_gpio_mem
 	mov r1, rGPIO
 	bl printf
 
-	@ Print the virtual address for the timer reigsters
+	@ Print the virtual address for the timer registers
 	ldr r0, =msg_gpio_mem
 	mov r1, rTIMER
 	bl printf
 
-	@ Init all the hardware components
+	@ Initialize all the hardware components
 	bl cop_init
 	bl color_wheel_init
 	bl feeder_init
@@ -156,12 +156,12 @@ main:
 	bl printf
 
 	@ r4: Current case to execute in the switch
-	@ r5: The last readed color
+	@ r5: The latest color read
 	ldr r4, =case_rotate_color_wheel
 	mov r5, #-1
 	main_loop:
 
-		@ Chchek if the timer interrupt pending bit is set
+		@ Check if the timer interrupt pending bit is set
 		ldr r0, [rTIMER, #0x410]
 		cmp r0, #0
 		beq check_btn
@@ -176,7 +176,7 @@ main:
 		@ Jump to the current case
 		mov pc, r4
 
-		@ This is the start case. The program is execution this so that the color wheel is rotating exactly 90°
+		@ This is the start case. The program is executing this so that the color wheel is rotating exactly 90°
 		case_rotate_color_wheel:
 			bl color_wheel_rotate90
 			cmp r0, #0
@@ -184,7 +184,7 @@ main:
 
 			b case_end
 
-		@ If the color wheel is done, then the program is going to wait 1second to read the color of the M&M
+		@ If the color wheel is done, the program is going to wait 1second to read the color of the M&M
 		case_read_color:
 			@ Check if 1 second is over
 			ldr r0, addr_cop_reading_time
@@ -267,7 +267,7 @@ main:
 		str r0, [rTIMER, #0x40C]
 
 		check_btn:
-			@ Check if the start stop button is pressed.
+			@ Check if the start/stop button is pressed.
 			ldr r0, [rGPIO, #GPEDS0]
 			ands r0, #1 << pin_nBTN1
 			beq main_loop
@@ -331,7 +331,7 @@ calibrate:
 	bl timer_set_enable
 	bl cop_wakeup
 
-	@ Calibrate as long the calibration is not done
+	@ Calibrate as long as the calibration is not done
 	calibrate_loop:
 		ldr r0, [rTIMER, #0x410]
 		cmp r0, #0
@@ -385,7 +385,7 @@ machine_start:
 
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ Disable all hardwarecomponents and stop the machine
+@@@ Disable all hardware components and stop the machine
 @@@ Inputs: None
 @@@ Return: None
 machine_stop:

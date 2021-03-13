@@ -9,13 +9,13 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ -----------------------------------------------------------------------------------------
 @@@ With this document its possible to control the Outlet.
-@@@ For this task it provides following methods:
+@@@ For this task it provides the following methods:
 @@@		- Function to calibrate the Outlet.
 @@@		- Functions to rotate the Outlet in 60 degree Steps
 @@@		  clockwise, counterclockwise respectively
 @@@ -----------------------------------------------------------------------------------------
 
-@@@ Renamimg registers --------------------------------------------------------------------
+@@@ Renaming registers --------------------------------------------------------------------
 	rGPIO	.req r10
 
 @@@ Pins of the Outlet ----------------------------------------------------------------------
@@ -66,7 +66,7 @@ addr_calibrate_steps_in_hall: .word calibrate_steps_in_hall
 .global outlet_rotate60_counterclockwise
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ This method initialize pins for the outlet
+@@@ This method initializes the pins for the outlet
 @@@ Inputs: None
 @@@ Return: None
 outlet_init:
@@ -113,14 +113,14 @@ outlet_set_enable:
 	bx lr
 
 @@@ ----------------------------------------------------------------------------------------
-@@@ Calibrate the Outlet to Start Position
+@@@ Calibrate the Outlet to start position
 @@@ Inputs: None
 @@@ Return: r0 == 0 -> calibration is done
 @@@			r0 == 1 -> still calibration
 outlet_calibrate:
 	push {r4, lr}
 
-	@ The timer is calling this method every time he counted to 0. This is probably to fast,
+	@ The timer is calling this method every time he counts to 0. This is probably too fast,
 	@ so we have to count how often the method is called and cancel the execution if the count
 	@ is not high enough
 	ldr r0, addr_timer_event_count
@@ -308,7 +308,7 @@ outlet_rotate60_clockwise:
 	push {r4, lr}
 	ldr r4, addr_rotation_steps
 
-	@ The timer is calling this method every time he counted to 0. This is probably to fast,
+	@ The timer is calling this method every time he counts to 0. This is probably too fast,
 	@ so we have to count how often the method is called and cancel the execution if the count
 	@ is not high enough
 	ldr r0, addr_timer_event_count
@@ -321,7 +321,7 @@ outlet_rotate60_clockwise:
 	ldr r1, speed_in_ms
 	str r1, [r0]
 
-	@ If the color wheel already did the 400 steps: Do nothing
+	@ If the color wheel already did 400 steps: Do nothing
 	ldr r0, [r4]
 	cmp r0, #0
 	beq outlet_rotate60_clockwise_end
@@ -372,7 +372,7 @@ outlet_rotate60_counterclockwise:
 	push {r4, lr}
 	ldr r4, addr_rotation_steps
 
-	@ The timer is calling this method every time he counted to 0. This is probably to fast,
+	@ The timer is calling this method every time he counts to 0. This is probably too fast,
 	@ so we have to count how often the method is called and cancel the execution if the count
 	@ is not high enough
 	ldr r0, addr_timer_event_count

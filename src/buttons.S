@@ -7,10 +7,10 @@
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
-@@@ This document provides methods to init the buttons for the machine
+@@@ This document provides methods to initialize the buttons for the machine
 @@@ -----------------------------------------------------------------------------------------
 
-@@@ Renamimg registers ----------------------------------------------------------------------
+@@@ Renaming registers ----------------------------------------------------------------------
 	rTIMER	.req r9
 	rGPIO	.req r10
 

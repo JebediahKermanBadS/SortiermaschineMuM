@@ -8,7 +8,7 @@
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
 @@@ This document deals with the following tasks:
-@@@		- Method to init the feeder pin
+@@@		- Method to initialize the feeder pin
 @@@		- Method to set the feeder on
 @@@	 	- Method to set the feeder off
 @@@ -----------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@
 .global feeder_off
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ This method initializes the feeder (Define the pin as output)
+@@@ This method initializes the feeder (Defines the pin as output)
 @@@ Inputs: None
 @@@ Return: None
 feeder_init:
@@ -47,7 +47,7 @@ feeder_init:
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ This method sets the feeder to on
+@@@ This method sets the feeder to 'on'
 @@@ Inputs: None
 @@@ Return: None
 feeder_on:
@@ -57,7 +57,7 @@ feeder_on:
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ This method sets the feeder to off
+@@@ This method sets the feeder to 'off'
 @@@ Inputs: None
 @@@ Return: None
 feeder_off:

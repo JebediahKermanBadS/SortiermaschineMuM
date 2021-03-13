@@ -8,13 +8,13 @@
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
 @@@ This document deals with the following tasks:
-@@@		- Method to init the color wheel
-@@@		- Method to set the color wheel enable
+@@@		- Method to initialize the color wheel
+@@@		- Method to enable the color wheel
 @@@		- Method to calibrate the color wheel
-@@@		- Method to roate the color wheel in 90° steps
+@@@		- Method to rotate the color wheel in 90° steps
 @@@ -----------------------------------------------------------------------------------------
 
-@@@ Renamimg registers ----------------------------------------------------------------------
+@@@ Renaming registers ----------------------------------------------------------------------
 	rGPIO	.req r10
 
 @@@ Pins of the Color-Wheel -----------------------------------------------------------------
@@ -23,7 +23,7 @@
 	.equ nRSTCW_PIN,	17  @ 0 = Inactivate, 1 = Active
 	.equ nHallCW_PIN,	20  @ 0 = There is something, 1 = There is nothing
 
-@@@ Pins for the input/outputs --------------------------------------------------------------
+@@@ Pins for the input/output --------------------------------------------------------------
 	.equ StepCW_IO_BIT,		9
 	.equ DirCW_IO_BIT,		18
 	.equ nRSTCW_IO_BIT,		21
@@ -238,7 +238,7 @@ color_wheel_calibrate:
 		cmp r0, #0
 		bne color_wheel_calibrate_not_finished
 
-		@ Remove always 2 steps from the counted value. This results in an automatically averaged count.
+		@ Remove 2 steps from the counted value. This results in an automatically averaged count.
 		@ Cmp it with zero
 		ldr r0, addr_calibrate_steps_in_hall
 		ldr r1, [r0]
@@ -248,12 +248,12 @@ color_wheel_calibrate:
 		@ While the counter is higher than zero repeat this
 		bpl color_wheel_calibrate_not_finished
 
-		@ The counter is now zero or lower. Reset the direction from the motor to clockwise
+		@ The counter is now zero or lower. Reset the direction of the motor to clockwise
 		mov r0, #1 << DirCW_PIN
 		str r0, [rGPIO, #GPCLR0]
 
 		@ Set the case for the method to the end label.
-		@ If the calibration method is called again, nothing is going to happen
+		@ If the calibration method is called again, nothing will happen
 		ldr r0, =color_wheel_calibrate_end
 		str r0, [r4]
 
@@ -283,14 +283,14 @@ color_wheel_calibration_reset:
 
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ Make 400 Steps wiht the color-wheel. This is exactly a rotation of 90 degrees
+@@@ Make 400 Steps with the color-wheel. This is exactly a rotation of 90 degrees
 @@@ Inputs: None
 @@@ Return: r0 - The remaining steps
 color_wheel_rotate90:
 	push {r4, lr}
 	ldr r4, addr_rotation_steps
 
-	@ The timer is calling this method every time he counted to 0. This is probably to fast,
+	@ The timer is calling this method every time he counts to 0. This is probably too fast,
 	@ so we have to count how often the method is called and cancel the execution if the count
 	@ is not high enough
 	ldr r0, addr_timer_event_count
@@ -308,7 +308,7 @@ color_wheel_rotate90:
 	cmp r0, #0
 	beq color_wheel_rotate90_end
 
-	@ Do step and check if the step is finished (state of the wheel pin have to be LOW)
+	@ Do step and check if the step is finished (state of the wheel pin has to be LOW)
 	bl color_wheel_step
 	cmp r0, #0
 	bgt color_wheel_rotate90_end
@@ -318,8 +318,8 @@ color_wheel_rotate90:
 	subs r0, #1
 	str r0, [r4]
 
-	@ If there are still steps left, jump straight to the end
-	@bgt color_wheel_rotate90_end
+	@ If there are any steps left, jump straight to the end
+	@ bgt color_wheel_rotate90_end
 
 	@ If not reset the counter
 	@	color_wheel_rotate90_reset:
