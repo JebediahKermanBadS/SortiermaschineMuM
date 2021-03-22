@@ -22,9 +22,9 @@
 outletpos_to_ledpos:
 	.word 2
 	.word 4
+	.word 6
 	.word 5
 	.word 3
-	.word 6
 	.word 1
 
 @@@ Define the colors for the leds as an array with the size 6
