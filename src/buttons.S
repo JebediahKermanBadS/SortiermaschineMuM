@@ -1,17 +1,16 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2021/02/20
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
 @@@ -----------------------------------------------------------------------------------------
-@@@ This document provides methods to init the buttons for the machine
+@@@ This document provides methods to initialize the buttons for the machine
 @@@ -----------------------------------------------------------------------------------------
 
-@@@ Renamimg registers ----------------------------------------------------------------------
+@@@ Renaming registers ----------------------------------------------------------------------
 	rTIMER	.req r9
 	rGPIO	.req r10
 

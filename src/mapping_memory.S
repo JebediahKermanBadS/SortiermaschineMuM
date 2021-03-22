@@ -1,7 +1,6 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2020/27/01
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -65,7 +64,7 @@ gpio: 		.word PERIPH + GPIO_OFFSET
 timerIR: 	.word PERIPH + TIMERIR_OFFSET
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ Creates a virtual address to access the gpio registers
+@@@ Create a virtual address to access the gpio registers
 @@@ Inputs: None
 @@@ Return:
 @@@		r0: The virtual adddress
@@ -97,7 +96,7 @@ mmap_timerIR:
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ Unmaps a virutal address
+@@@ Unmaps a virtual address
 @@@ Inputs:
 @@@		r0: The virtual address
 @@@ Return: None

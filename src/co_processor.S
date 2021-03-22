@@ -1,7 +1,6 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2021/02/04
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
@@ -18,7 +17,7 @@
 @@@ Renaming registers ----------------------------------------------------------------------
 	rGPIO	.req r10
 
-@@@ Pins definition for the co-processor ----------------------------------------------------
+@@@ Pin definition for the co-processor ----------------------------------------------------
 	.equ colorBit1_PIN,		22
 	.equ colorBit2_PIN,		23
 	.equ colorBit3_PIN,		24
@@ -43,7 +42,7 @@
 .global cop_read_color
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ Wake up the Co-Processor (Sets the nSLP-Pin to HIGH)
+@@@ Initialize the bits of the co-processor
 @@@ Inputs: None
 @@@ Return: None
 cop_init:
@@ -64,7 +63,7 @@ cop_init:
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ Wake up the Co-Processor (Sets the nSLP-Pin to HIGH)
+@@@ Wake up the Co-Processor (Set the nSLP-Pin to HIGH)
 @@@ Inputs: None
 @@@ Return: None
 cop_wakeup:
@@ -82,7 +81,7 @@ cop_sleep:
 	bx lr
 
 @@@ -----------------------------------------------------------------------------------------
-@@@ Reading the color bits and save it as an int
+@@@ Read the color bit and save it as an int
 @@@ Inputs: None
 @@@ Return:
 @@@		r0 == -1: UNKNOWN

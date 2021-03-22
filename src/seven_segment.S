@@ -1,12 +1,13 @@
 @@@ -----------------------------------------------------------------------------------------
 @@@ Project:	M&M Sortingmachine
 @@@  Target:	Raspberry Pi Zero
-@@@	   Date:	2021/02/25
 @@@ Group members:
 @@@		- Demiroez Dilara
 @@@		- Gonther, Levin
 @@@		- Grajczak, Benjamin
 @@@		- Pfister, Marc
+@@@ -----------------------------------------------------------------------------------------
+@@@ THIS DOCUMENT IS JUST A PROTOTYPE! THE 7 SEGMENT IS NOT WORKING
 @@@ -----------------------------------------------------------------------------------------
 
 @@@ Renamimg registers ----------------------------------------------------------------------
